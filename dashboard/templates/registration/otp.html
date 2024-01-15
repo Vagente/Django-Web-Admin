@@ -1,0 +1,30 @@
+{% extends 'dashboard/base.html' %}
+
+{% block css %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'dashboard/otp.css' %}">
+{% endblock %}
+
+{% block content %}
+
+    <main class="form-signin w-100 m-auto">
+        <form method="post">
+            {% csrf_token %}
+            <h1 class="h3 mb-3 fw-normal">Enter your otp token</h1>
+
+            <div class="form-floating">
+                {{ form.otp_token.errors }}
+                {{ form.otp_token }}
+                {{ form.otp_token.label_tag }}
+            </div>
+
+            <div class="form-floating">
+                {{ form.otp_device.errors }}
+                {{ form.otp_device }}
+                {{ form.otp_device.label_tag }}
+            </div>
+            <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
+        </form>
+    </main>
+
+{% endblock %}

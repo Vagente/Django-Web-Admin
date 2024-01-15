@@ -1,0 +1,27 @@
+{% extends 'dashboard/base.html' %}
+
+{% block css %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'dashboard/login.css' %}">
+{% endblock %}
+
+{% block content %}
+
+    <main class="form-signin w-100 m-auto">
+        <form method="post">
+            {% csrf_token %}
+            <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+            <div class="form-floating">
+                {{ form.username }}
+                {{ form.username.label_tag }}
+            </div>
+            <div class="form-floating">
+                {{ form.password }}
+                {{ form.password.label_tag }}
+            </div>
+            {{ form.errors }}
+            <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
+        </form>
+    </main>
+
+{% endblock %}
