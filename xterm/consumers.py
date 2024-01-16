@@ -18,6 +18,7 @@ MAX_CONNECTION = 1
 CONNECTION_LIMIT_CODE = 4000
 LOGGED_OUT_CODE = 4001
 USER_AUTH_FAIL_CODE = 4002
+TERMINAL_CLOSED_CODE = 4003
 connections = 0
 
 
@@ -40,13 +41,17 @@ class XtermConsumer(WebsocketConsumer):
         epoll.register(self.fd, select.EPOLLIN)
         while True:
             time.sleep(0.01)
+            pid, status = os.waitpid(self.child_pid, os.WNOHANG)
+            if pid == self.child_pid:
+                self.close(TERMINAL_CLOSED_CODE)
+                break
             event = epoll.poll(timeout=5)
             if event:
                 output = os.read(self.fd, MAX_READ_BYTES).decode()
                 if self.stop_event.is_set():
                     break
                 self.send(json.dumps({'type': 'pty_output', 'output': output}))
-        print("thread killed")
+        print("thread exited")
         return
 
     def connect(self):
@@ -65,7 +70,7 @@ class XtermConsumer(WebsocketConsumer):
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
             subprocess.run("bash")
-            sys.exit()
+            os._exit(0)
         print(f"parent: {os.getpid()}")
         print(f"child: {self.child_pid}")
         os.write(self.fd, b"cd\rclear\r")
@@ -80,13 +85,13 @@ class XtermConsumer(WebsocketConsumer):
             print("connection limit reached")
             return
         elif close_code == 1006:
-            print("User auth failed/Connection rejected")
+            print("User auth failed(Connection rejected)")
             return
-        print("post disconnection")
-        self.stop_event.set()
-        os.kill(self.child_pid, signal.SIGKILL)
-        os.wait()
-        self.t.join()
+        if close_code != TERMINAL_CLOSED_CODE:
+            self.stop_event.set()
+            os.kill(self.child_pid, signal.SIGKILL)
+            os.wait()
+            self.t.join()
         lock = threading.Lock()
         global connections
         with lock:
