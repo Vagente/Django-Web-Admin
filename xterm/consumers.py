@@ -1,13 +1,9 @@
-import sys
-
 from channels.generic.websocket import WebsocketConsumer
 import threading
 import os
 import pty
 import select
 import subprocess
-import struct
-import fcntl
 import termios
 import signal
 import time
@@ -30,10 +26,6 @@ class XtermConsumer(WebsocketConsumer):
         self.t = threading.Thread(target=self.read_and_forward_pty_output, args=(), daemon=True)
         self.stop_event = threading.Event()
         self.pid = os.getpid()
-
-    def set_winsize(self, row, col, xpix=0, ypix=0):
-        winsize = struct.pack("HHHH", row, col, xpix, ypix)
-        fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
 
     def read_and_forward_pty_output(self):
         print("process started")
@@ -112,6 +104,6 @@ class XtermConsumer(WebsocketConsumer):
         if data["type"] == "pty_input":
             os.write(self.fd, data["content"].encode())
         elif data["type"] == "resize":
-            self.set_winsize(data["rows"], data["cols"])
+            termios.tcsetwinsize(self.fd, (data["rows"], data["cols"]))
         else:
             raise TypeError(json.dumps(data))
