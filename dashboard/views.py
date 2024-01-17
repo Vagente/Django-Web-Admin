@@ -11,7 +11,6 @@ from .forms import LoginForm
 
 @login_required()
 def index(request):
-    print(type(request.user))
     return render(request, 'dashboard/index.html')
 
 

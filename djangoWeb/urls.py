@@ -17,11 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django_otp.admin import OTPAdminSite
-from django.contrib.auth.views import LoginView
+import django.contrib.auth.views as auth_views
 
 admin.site.__class__ = OTPAdminSite
 
+
 urlpatterns = [
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),
     path('terminal/', include('xterm.urls'), name='terminal'),
     path('', include('dashboard.urls'), name='dashboard')

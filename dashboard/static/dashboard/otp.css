@@ -1,21 +1,17 @@
 html,
 body {
-  height: 100%;
+    height: 100%;
 }
 
 .form-signin {
-  max-width: 330px;
-  padding: 1rem;
-}
-
-.form-signin .form-floating:focus-within {
-  z-index: 2;
+    max-width: 330px;
+    padding: 1rem;
 }
 
 .form-signin select {
-  margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .form-signin input {
-  margin-bottom: 10px;
+    margin-bottom: 10px;
 }

@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 LOGIN_URL = '/login'
 OTP_LOGIN_URL = '/login/otp'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/login/otp'
 # Application definition
 
 INSTALLED_APPS = [
