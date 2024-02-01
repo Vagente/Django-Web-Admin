@@ -25,6 +25,6 @@ admin.site.__class__ = OTPAdminSite
 urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),
-    path('terminal/', include('xterm.urls'), name='terminal'),
-    path('', include('dashboard.urls'), name='dashboard')
+    path('terminal/', include('xterm.urls')),
+    path('', include('dashboard.urls'))
 ]

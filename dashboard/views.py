@@ -7,6 +7,8 @@ from django.utils.functional import cached_property
 from .forms import OTPForm
 from django_otp.decorators import otp_required
 from .forms import LoginForm
+from django.contrib.auth import login as auth_login
+from django.http import HttpResponseRedirect
 
 
 @login_required()
@@ -42,3 +44,10 @@ class OTPView(auth_views.LoginView):
 class MyLoginView(auth_views.LoginView):
     redirect_authenticated_user = True
     authentication_form = LoginForm
+
+    def form_valid(self, form):
+        """Security check complete. Log the user in."""
+        auth_login(self.request, form.get_user())
+        if not form.cleaned_data["remember_me"]:
+            self.request.session.set_expiry(0)
+        return HttpResponseRedirect(self.get_success_url())

@@ -18,6 +18,12 @@
                 {{ form.password }}
                 {{ form.password.label_tag }}
             </div>
+
+            <div class="form-check text-start my-3">
+                {{ form.remember_me }}
+                {{ form.remember_me.label_tag }}
+            </div>
+
             {{ form.errors }}
             <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
         </form>

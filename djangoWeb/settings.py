@@ -28,7 +28,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 LOGIN_URL = '/login'
 OTP_LOGIN_URL = '/login/otp'
-LOGIN_REDIRECT_URL = '/login/otp'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login'
 # Application definition
 
 INSTALLED_APPS = [
@@ -76,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = 'djangoWeb.wsgi.application'
+
 ASGI_APPLICATION = 'djangoWeb.asgi.application'
 
 CHANNEL_LAYERS = {
