@@ -2,22 +2,53 @@
 <html style="height: calc(100% - 50px)" lang="en">
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <title>xterm</title>
 </head>
 
 <body style="height: 100%; background: #0d0d0d">
 
 <div style="background: #0d0d0d; padding-bottom: 5px;">
-    <span style="font-size: small; color: white">Status: <span style="font-size: small;"
-                                                               id="status">connecting...</span></span>
-    <button id="button" type="button" onclick="connection_button()">Connect</button>
+    <span style="color: white">Status:
+        <span id="status">connecting...</span>
+    </span>
+    <button id="button" class="btn btn-success btn-sm" type="button" onclick="connection_button()">Connect</button>
+    <button type="button" id="open-modal" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+            data-bs-target="#username-modal">
+        select user
+    </button>
+
 </div>
 
 <div style=" width: 100%; height:100%;" id="terminal"></div>
 
+<div class="modal" id="username-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modal title</h5>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="message-text" class="col-form-label">Username:</label>
+                    <input type="text" id="username-input" class="form-control" placeholder="Username"
+                           aria-label="Username">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="modal-button" class="btn btn-primary" data-bs-dismiss="modal" onclick="get_username()">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
 <script>
     const terminal = new Terminal({
         theme: {
@@ -31,28 +62,50 @@
     const socket = new WebSocket(
         'wss://localhost/ws/xterm/'
     )
-
+    console.log()
     const status = document.getElementById("status")
     const button = document.getElementById("button")
 
     terminal.open(document.getElementById('terminal'));
 
-    terminal.onKey(event => {
-        socket.send(JSON.stringify({
-            "type": "pty_input",
-            "content": event["key"]
-        }));
+    const myInput = document.getElementById('username-input')
+    const myModal = document.getElementById('username-modal')
+    const modal_button = document.getElementById("modal-button")
+    const openModalButton = document.getElementById('open-modal')
+
+    myModal.addEventListener('shown.bs.modal', () => {
+        myInput.focus()
+    })
+    myInput.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            modal_button.click()
+        }
     });
 
+    function get_username() {
+        if (myInput.value === "") {
+            alert("username can't be empty")
+            return
+        }
+        socket.send(JSON.stringify({
+            "type": "init",
+            "username": myInput.value
+        }));
+    }
+
     socket.onopen = function () {
-        status.innerHTML = '<span style="background-color: green;">connected</span>'
+        status.innerHTML = '<span style="background-color: #2470dc;">initializing</span>'
         button.innerHTML = 'Disconnect'
+        button.classList.replace("btn-success", "btn-danger")
+        console.log("Connection is made")
+        openModalButton.click()
     }
 
     socket.onclose = function (event) {
         status.innerHTML = '<span style="background-color: red;">disconnected</span>'
         button.innerHTML = 'Connect'
-        if (event["code"] === {{ CONNECTION_LIMIT_CODE }}){
+        button.classList.replace("btn-danger", "btn-success")
+        if (event["code"] === {{ CONNECTION_LIMIT_CODE }}) {
             alert({{ MAX_CONNECTION }} + " max connection limit reached")
         }
     }
@@ -63,9 +116,28 @@
     }
 
     socket.onmessage = function (event) {
-        const data = JSON.parse(event.data);
+        var data;
+        try {
+            data = JSON.parse(event.data);
+        } catch (e) {
+            alert(event.data)
+            return
+        }
+        console.log(event)
+        console.log(event.data)
         if (data["type"] === "pty_output") {
             terminal.write(data.output)
+        } else if (data["type"] === "init") {
+            terminal.onKey(event => {
+                socket.send(JSON.stringify({
+                    "type": "pty_input",
+                    "content": event["key"]
+                }));
+            });
+            resize()
+            window.onresize = resize
+            window.onload = resize
+            status.innerHTML = `<span style="background-color: green;">connected as user ${data.username}</span>`
         }
     }
 
@@ -86,22 +158,6 @@
         }));
     }
 
-    function waitForSocketConnection(socket) {
-        setTimeout(
-            function () {
-                if (socket.readyState === 1) {
-                    console.log("Connection is made")
-                    window.onresize = resize
-                    window.onload = resize
-                    resize()
-                } else {
-                    console.log("wait for connection...")
-                    waitForSocketConnection(socket);
-                }
-            }, 1);
-    }
-
-    waitForSocketConnection(socket)
 
 </script>
 
