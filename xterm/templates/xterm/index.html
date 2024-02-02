@@ -37,7 +37,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" id="modal-button" class="btn btn-primary" data-bs-dismiss="modal" onclick="get_username()">Confirm</button>
+                <button type="button" id="modal-button" class="btn btn-primary" data-bs-dismiss="modal"
+                        onclick="get_username()">Confirm
+                </button>
             </div>
         </div>
     </div>
@@ -70,7 +72,7 @@
 
     const myInput = document.getElementById('username-input')
     const myModal = document.getElementById('username-modal')
-    const modal_button = document.getElementById("modal-button")
+    const modal_confirm_button = document.getElementById("modal-button")
     const openModalButton = document.getElementById('open-modal')
 
     myModal.addEventListener('shown.bs.modal', () => {
@@ -78,18 +80,19 @@
     })
     myInput.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
-            modal_button.click()
+            modal_confirm_button.click()
         }
     });
 
     function get_username() {
         if (myInput.value === "") {
             alert("username can't be empty")
+            openModalButton.click()
             return
         }
         socket.send(JSON.stringify({
-            "type": "init",
-            "username": myInput.value
+            {{ JSON_TYPE }}: {{ TYPE_INIT }},
+            {{ JSON_CONTENT }}: myInput.value
         }));
     }
 
@@ -116,28 +119,34 @@
     }
 
     socket.onmessage = function (event) {
-        var data;
+        let data;
         try {
             data = JSON.parse(event.data);
         } catch (e) {
             alert(event.data)
             return
         }
-        console.log(event)
-        console.log(event.data)
-        if (data["type"] === "pty_output") {
-            terminal.write(data.output)
-        } else if (data["type"] === "init") {
+        if (data[{{ JSON_TYPE }}] === {{ TYPE_PTY_OUTPUT }}) {
+            terminal.write(data[{{ JSON_CONTENT }}])
+        } else if (data[{{ JSON_TYPE }}] === {{ TYPE_INIT }}) {
             terminal.onKey(event => {
                 socket.send(JSON.stringify({
-                    "type": "pty_input",
-                    "content": event["key"]
+                    {{ JSON_TYPE }}: {{ TYPE_PTY_INPUT }},
+                    {{ JSON_CONTENT }}: event["key"]
                 }));
             });
+            terminal.focus()
             resize()
             window.onresize = resize
             window.onload = resize
-            status.innerHTML = `<span style="background-color: green;">connected as user ${data.username}</span>`
+            status.innerHTML = `<span style="background-color: green;">connected as user ${data[{{ JSON_CONTENT }}]}</span>`
+        } else if (data[{{ JSON_TYPE }}] === {{ TYPE_EXITED }}) {
+            status.innerHTML = `<span style="background-color: green;">Terminal exited</span>`
+        } else if (data[{{ JSON_TYPE }}] === {{ TYPE_ERROR }}) {
+            alert(data[{{ JSON_CONTENT }}])
+            if (data[{{ JSON_CONTENT }}] === "Invalid username") {
+                openModalButton.click()
+            }
         }
     }
 
@@ -152,13 +161,11 @@
     function resize() {
         fitAddon.fit()
         socket.send(JSON.stringify({
-            "type": "resize",
+            {{ JSON_TYPE }}: {{ TYPE_RESIZE }},
             "cols": terminal.cols,
             "rows": terminal.rows
         }));
     }
-
-
 </script>
 
 </body>

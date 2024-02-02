@@ -8,17 +8,14 @@ import signal
 import time
 import json
 import pwd
+from .constants import *
 
-MAX_READ_BYTES = 1024 * 20
-MAX_CONNECTION = 1
-CONNECTION_LIMIT_CODE = 4000
-LOGGED_OUT_CODE = 4001
-USER_AUTH_FAIL_CODE = 4002
-TERMINAL_CLOSED_CODE = 4003
-connections = 0
+xterm_connections = 0
 
 
 def valid_username(username):
+    if not type(username) is str:
+        return False
     for p in pwd.getpwall():
         shell = p[-1].split("/")[-1]
         if shell != "nologin" and shell != "false" and p[0] == username:
@@ -31,13 +28,13 @@ class XtermConsumer(WebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.fd = None
         self.child_pid = None
-        self.t = threading.Thread(target=self.read_and_forward_pty_output, args=(), daemon=True)
+        self.t = None
         self.stop_event = threading.Event()
-        self.pid = os.getpid()
         self.terminal_started = False
+        self.connected = False
 
     def read_and_forward_pty_output(self):
-        print("process started")
+        print("thread started")
         epoll = select.epoll()
         epoll.register(self.fd, select.EPOLLIN)
         while True:
@@ -45,28 +42,31 @@ class XtermConsumer(WebsocketConsumer):
             pid, status = os.waitpid(self.child_pid, os.WNOHANG)
             if pid == self.child_pid:
                 print(f"child {pid} exited with status code {status}")
-                self.close(TERMINAL_CLOSED_CODE)
+                self.terminal_started = False
+                self.send(json.dumps({JSON_TYPE: TYPE_EXITED}))
                 break
             event = epoll.poll(timeout=1)
             if self.stop_event.is_set():
                 break
             if event:
-                output = os.read(self.fd, MAX_READ_BYTES).decode()
-                self.send(json.dumps({'type': 'pty_output', 'output': output}))
+                output = os.read(self.fd, XTERM_MAX_READ_BYTES).decode()
+                self.send(json.dumps({JSON_TYPE: TYPE_PTY_OUTPUT, JSON_CONTENT: output}))
         print("thread exited")
         return
 
     def create_terminal(self, username):
-        print(f"check username {username}")
+        if self.t is not None:
+            self.t.join()
         if not valid_username(username):
-            self.send("username doesn't exist")
+            self.send(json.dumps({JSON_TYPE: TYPE_ERROR, JSON_CONTENT: "Invalid username"}))
             return
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
-            os.execv("/bin/su", ("--login", "vagente"))
+            os.execv("/bin/su", ("--login", username))
         print(f"parent: {os.getpid()}")
         print(f"child: {self.child_pid}")
-        self.send(json.dumps({'type': 'init', 'username': username}))
+        self.send(json.dumps({JSON_TYPE: TYPE_INIT, JSON_CONTENT: username}))
+        self.t = threading.Thread(target=self.read_and_forward_pty_output, args=(), daemon=True)
         self.t.start()
         self.terminal_started = True
 
@@ -74,72 +74,76 @@ class XtermConsumer(WebsocketConsumer):
         if not self.scope["user"].is_verified() or not self.scope["user"].is_superuser:
             self.close()
             return
-        global connections
+        global xterm_connections
         lock = threading.Lock()
         with lock:
-            if connections > MAX_CONNECTION:
+            if xterm_connections > XTERM_MAX_CONNECTION:
+                self.close()
                 raise Exception
-            if connections == MAX_CONNECTION:
+            if xterm_connections == XTERM_MAX_CONNECTION:
                 self.accept()
-                self.close(code=CONNECTION_LIMIT_CODE)
+                self.close(code=XTERM_CONNECTION_LIMIT_CODE)
                 return
         with lock:
-            connections += 1
+            xterm_connections += 1
+        self.connected = True
         self.accept()
 
     def disconnect(self, close_code):
         print(f"close code {close_code}")
-        if close_code == CONNECTION_LIMIT_CODE:
-            print("connection limit reached")
-            return
-        elif close_code == 1006:
-            print("User auth failed(Connection rejected)")
-            return
-        if close_code != TERMINAL_CLOSED_CODE and self.terminal_started:
+        if self.terminal_started:
             self.stop_event.set()
+            pid, status = os.waitpid(self.child_pid, os.WNOHANG)
+            if pid == self.child_pid:
+                os.kill(self.child_pid, signal.SIGKILL)
+                os.waitpid(self.child_pid, 0)
+        if self.t is not None:
             self.t.join()
-            os.kill(self.child_pid, signal.SIGKILL)
-            os.wait()
-        lock = threading.Lock()
-        global connections
-        with lock:
-            connections -= 1
-            if connections < 0:
-                raise Exception
-        print('disconnected')
+        if self.connected:
+            lock = threading.Lock()
+            global xterm_connections
+            with lock:
+                xterm_connections -= 1
+                if xterm_connections < 0:
+                    raise Exception
+            print('disconnected')
 
     def receive(self, text_data=None, bytes_data=None):
         if text_data is None:
             return
         try:
             data: dict = json.loads(text_data)
-            data_type = data["type"]
+            data_type = data[JSON_TYPE]
         except Exception as e:
-            print(e)
+            print(f"error {e}")
             return
-        if data_type == "pty_input":
+        if data_type == TYPE_PTY_INPUT:
             try:
-                content = data["content"]
+                content = data[JSON_CONTENT]
             except KeyError:
                 return
+
             if type(content) is str:
-                os.write(self.fd, data["content"].encode())
-        elif data_type == "resize":
+                os.write(self.fd, content.encode())
+        elif data_type == TYPE_RESIZE:
             try:
                 rows = data["rows"]
                 cols = data["cols"]
             except KeyError:
                 return
+
             if type(rows) is int and type(cols) is int:
                 try:
                     termios.tcsetwinsize(self.fd, (data["rows"], data["cols"]))
                 except Exception as e:
-                    print(e)
-        elif not self.terminal_started and data_type == "init":
+                    print(f"another error {e}")
+
+        elif not self.terminal_started and data_type == TYPE_INIT:
             try:
-                username = data["username"]
+                username = data[JSON_CONTENT]
             except KeyError:
                 return
+
             self.create_terminal(username)
         else:
-            self.send("invalid data type/already initialized")
+            self.send("invalid data type/terminal already started")
