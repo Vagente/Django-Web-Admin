@@ -62,7 +62,9 @@ class XtermConsumer(WebsocketConsumer):
             return
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
-            os.execv("/bin/su", ("--login", username))
+            term_env: dict = {"TERM": os.environ["TERM"]}
+            os.chdir(os.path.expanduser("~" + username))
+            os.execve("/bin/su", ("--login", username), term_env)
         print(f"parent: {os.getpid()}")
         print(f"child: {self.child_pid}")
         self.send(json.dumps({JSON_TYPE: TYPE_INIT, JSON_CONTENT: username}))
