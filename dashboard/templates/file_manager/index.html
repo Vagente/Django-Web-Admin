@@ -1,0 +1,55 @@
+{% extends 'dashboard/sidebar_base.html' %}
+
+{% block css %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'dashboard/dashboard.css' %}">
+{% endblock %}
+
+{% block main %}
+    <main class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+            <symbol id="folder-fill" viewBox="0 0 16 16" style="color: #ffd45e">
+                <path fill-rule="evenodd"
+                      d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3m-8.322.12q.322-.119.684-.12h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981z"></path>
+            </symbol>
+        </svg>
+
+        <div>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Last modified</th>
+                    <th scope="col">type</th>
+                    <th scope="col">size</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th scope="row">
+                        <svg class="bi">
+                            <use href="#folder-fill"></use>
+                        </svg>
+                        1
+                    </th>
+                    <td>Mark</td>
+                    <td>Otto</td>
+                    <td>@mdo</td>
+                </tr>
+                <tr>
+                    <th scope="row">2</th>
+                    <td>Jacob</td>
+                    <td>Thornton</td>
+                    <td>@fat</td>
+                </tr>
+                <tr>
+                    <th scope="row">3</th>
+                    <td colspan="2">Larry the Bird</td>
+                    <td>@twitter</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+{% endblock %}

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-nbt&1-45&5uaxcyrt3e8nf+8s(ilpq4rd%r-a8hhvm2=t($aw3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 LOGIN_URL = '/login'
 OTP_LOGIN_URL = '/login/otp'
 LOGIN_REDIRECT_URL = '/'

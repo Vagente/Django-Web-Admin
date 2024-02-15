@@ -9,6 +9,14 @@ from django_otp.decorators import otp_required
 from .forms import LoginForm
 from django.contrib.auth import login as auth_login
 from django.http import HttpResponseRedirect
+from django_otp.views import LoginView
+from django.conf import settings
+
+from django.http import HttpResponseRedirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.debug import sensitive_post_parameters
 
 
 @login_required()
@@ -16,14 +24,28 @@ def index(request):
     return render(request, 'dashboard/index.html')
 
 
-@otp_required()
-def test(request):
-    return render(request, 'dashboard/test.html')
+def file_manager(request):
+    return render(request, 'file_manager/index.html')
 
 
 class OTPView(auth_views.LoginView):
     otp_token_form = OTPForm
     template_name = "registration/otp.html"
+    redirect_verified_user = True
+
+    @method_decorator(sensitive_post_parameters())
+    @method_decorator(csrf_protect)
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        if self.redirect_verified_user and self.request.user.is_verified():
+            redirect_to = settings.LOGIN_URL
+            if redirect_to == self.request.path:
+                raise ValueError(
+                    "Redirection loop for authenticated user detected. Check that "
+                    "your LOGIN_REDIRECT_URL doesn't point to a OTP page."
+                )
+            return HttpResponseRedirect(redirect_to)
+        return super().dispatch(request, *args, **kwargs)
 
     @cached_property
     def authentication_form(self):
@@ -37,7 +59,6 @@ class OTPView(auth_views.LoginView):
         user = form.get_user()
         if not hasattr(user, 'backend'):
             user.backend = self.request.session[BACKEND_SESSION_KEY]
-
         return super().form_valid(form)
 
 
