@@ -8,5 +8,4 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("login/", MyLoginView.as_view(), name="login"),
     path("login/otp/", login_required(views.OTPView.as_view()), name="otp"),
-    path("file_manager", views.file_manager, name="file_manager")
 ]

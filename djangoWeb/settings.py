@@ -35,6 +35,7 @@ LOGOUT_REDIRECT_URL = '/login'
 INSTALLED_APPS = [
     'dashboard.apps.DashboardConfig',
     'xterm.apps.XtermConfig',
+    'file_manager.apps.FileManagerConfig',
     'daphne.apps.DaphneConfig',
     'django.contrib.admin',
     'django.contrib.auth',

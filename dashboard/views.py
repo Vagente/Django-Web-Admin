@@ -24,10 +24,6 @@ def index(request):
     return render(request, 'dashboard/index.html')
 
 
-def file_manager(request):
-    return render(request, 'file_manager/index.html')
-
-
 class OTPView(auth_views.LoginView):
     otp_token_form = OTPForm
     template_name = "registration/otp.html"
