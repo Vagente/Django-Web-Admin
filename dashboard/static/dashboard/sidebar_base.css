@@ -1,0 +1,22 @@
+.bi {
+    width: 2rem;
+    height: 2rem;
+    fill: currentColor;
+}
+
+.sidebar .nav-item .nav-link {
+    color: white;
+    border-radius: 0.375rem;
+    margin: 0.1rem 0.5rem 0.1rem 0.5rem;
+}
+
+
+.sidebar .nav-link.active, .nav-link:hover {
+    background-color: #483d8b;
+}
+
+.navbar-brand {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    background-color: #191c1f;
+}

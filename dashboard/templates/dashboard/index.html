@@ -1,8 +1,7 @@
 {% extends 'dashboard/sidebar_base.html' %}
 
 {% block css %}
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'dashboard/dashboard.css' %}">
+    {{ block.super }}
 {% endblock %}
 
 {% block main %}
