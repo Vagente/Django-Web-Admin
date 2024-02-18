@@ -5,11 +5,8 @@ from django.contrib.auth import BACKEND_SESSION_KEY
 from django.contrib.auth import views as auth_views
 from django.utils.functional import cached_property
 from .forms import OTPForm
-from django_otp.decorators import otp_required
 from .forms import LoginForm
 from django.contrib.auth import login as auth_login
-from django.http import HttpResponseRedirect
-from django_otp.views import LoginView
 from django.conf import settings
 
 from django.http import HttpResponseRedirect
@@ -18,10 +15,16 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 
+import psutil
+from datetime import datetime
+
 
 @login_required()
 def index(request):
-    return render(request, 'dashboard/index.html')
+    context = {
+        "boot_time": psutil.boot_time()
+    }
+    return render(request, 'dashboard/index.html', context)
 
 
 class OTPView(auth_views.LoginView):
@@ -34,7 +37,7 @@ class OTPView(auth_views.LoginView):
     @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
         if self.redirect_verified_user and self.request.user.is_verified():
-            redirect_to = settings.LOGIN_URL
+            redirect_to = self.get_success_url()
             if redirect_to == self.request.path:
                 raise ValueError(
                     "Redirection loop for authenticated user detected. Check that "
