@@ -74,7 +74,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <form method="post" action="{% url 'logout' %}">
+                                <form id="logout_form" method="post" action="{% url 'logout' %}">
                                     {% csrf_token %}
                                     <div class="d-grid">
                                         <button class="nav-link d-flex align-items-center gap-2" type="submit">log out
@@ -82,9 +82,6 @@
                                     </div>
                                 </form>
                             </li>
-                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase">
-                                <span>Title</span>
-                            </h6>
                         </ul>
                     </div>
                 </div>

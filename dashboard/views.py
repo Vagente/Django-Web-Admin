@@ -1,28 +1,31 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 from functools import partial
-from django.contrib.auth import BACKEND_SESSION_KEY
-from django.contrib.auth import views as auth_views
-from django.utils.functional import cached_property
-from .forms import OTPForm
-from .forms import LoginForm
-from django.contrib.auth import login as auth_login
-from django.conf import settings
 
+import os
+import psutil
+from django.conf import settings
+from django.contrib.auth import BACKEND_SESSION_KEY
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.utils.decorators import method_decorator
+from django.utils.functional import cached_property
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 
-import psutil
-from datetime import datetime
+from .forms import LoginForm
+from .forms import OTPForm
 
 
 @login_required()
 def index(request):
+    load = os.getloadavg()
     context = {
-        "boot_time": psutil.boot_time()
+        "boot_time": psutil.boot_time(),
+        "time_zone": settings.TIME_ZONE,
+        "load_avg": f"{load[0]}, {load[1]}, {load[2]}"
     }
     return render(request, 'dashboard/index.html', context)
 

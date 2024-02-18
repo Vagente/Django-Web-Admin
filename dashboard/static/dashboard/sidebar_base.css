@@ -4,6 +4,10 @@
     fill: currentColor;
 }
 
+body {
+    background-color: #1e1e1e;
+}
+
 .sidebar .nav-item .nav-link {
     color: white;
     border-radius: 0.375rem;

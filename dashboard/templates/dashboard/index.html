@@ -2,6 +2,8 @@
 
 {% block css %}
     {{ block.super }}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'dashboard/dashboard.css' %}">
 {% endblock %}
 
 {% block main %}
@@ -15,144 +17,102 @@
                 </div>
             </div>
         </div>
-        <div class="col-6" style="background-color: crimson; height: 100px"></div>
-        <div class="col-6">
-            <canvas class="my-4" id="myChart"></canvas>
-        </div>
 
-        <h2>Section title</h2>
-        <div class="table-responsive small">
-            <table class="table table-striped table-sm">
-                <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Header</th>
-                    <th scope="col">Header</th>
-                    <th scope="col">Header</th>
-                    <th scope="col">Header</th>
-                </tr>
-                </thead>
+        <h3>System</h3>
+        <div class="table-responsive">
+            <table class="table table-striped table-borderless">
                 <tbody>
                 <tr>
-                    <td>1,001</td>
-                    <td>random</td>
-                    <td>data</td>
-                    <td>placeholder</td>
-                    <td>text</td>
+                    <td>Server time</td>
+                    <td id="server_time"></td>
                 </tr>
                 <tr>
-                    <td>1,002</td>
-                    <td>placeholder</td>
-                    <td>irrelevant</td>
-                    <td>visual</td>
-                    <td>layout</td>
+                    <td>Server uptime</td>
+                    <td id="uptime"></td>
                 </tr>
                 <tr>
-                    <td>1,003</td>
-                    <td>data</td>
-                    <td>rich</td>
-                    <td>dashboard</td>
-                    <td>tabular</td>
+                    <td>Server timezone</td>
+                    <td id="timezone"></td>
                 </tr>
                 <tr>
-                    <td>1,003</td>
-                    <td>information</td>
-                    <td>placeholder</td>
-                    <td>illustrative</td>
-                    <td>data</td>
+                    <td>CPU load average</td>
+                    <td>{{ load_avg }}</td>
                 </tr>
                 <tr>
                     <td>1,004</td>
-                    <td>text</td>
-                    <td>random</td>
-                    <td>layout</td>
-                    <td>dashboard</td>
-                </tr>
-                <tr>
-                    <td>1,005</td>
-                    <td>dashboard</td>
-                    <td>irrelevant</td>
-                    <td>text</td>
-                    <td>placeholder</td>
-                </tr>
-                <tr>
-                    <td>1,006</td>
-                    <td>dashboard</td>
-                    <td>illustrative</td>
-                    <td>rich</td>
-                    <td>data</td>
-                </tr>
-                <tr>
-                    <td>1,007</td>
-                    <td>placeholder</td>
-                    <td>tabular</td>
-                    <td>information</td>
-                    <td>irrelevant</td>
-                </tr>
-                <tr>
-                    <td>1,008</td>
-                    <td>random</td>
-                    <td>data</td>
-                    <td>placeholder</td>
-                    <td>text</td>
-                </tr>
-                <tr>
-                    <td>1,009</td>
-                    <td>placeholder</td>
-                    <td>irrelevant</td>
-                    <td>visual</td>
-                    <td>layout</td>
-                </tr>
-                <tr>
-                    <td>1,010</td>
-                    <td>data</td>
-                    <td>rich</td>
-                    <td>dashboard</td>
-                    <td>tabular</td>
-                </tr>
-                <tr>
-                    <td>1,011</td>
-                    <td>information</td>
-                    <td>placeholder</td>
-                    <td>illustrative</td>
-                    <td>data</td>
-                </tr>
-                <tr>
-                    <td>1,012</td>
-                    <td>text</td>
-                    <td>placeholder</td>
-                    <td>layout</td>
-                    <td>dashboard</td>
-                </tr>
-                <tr>
-                    <td>1,013</td>
-                    <td>dashboard</td>
-                    <td>irrelevant</td>
-                    <td>text</td>
-                    <td>visual</td>
-                </tr>
-                <tr>
-                    <td>1,014</td>
-                    <td>dashboard</td>
-                    <td>illustrative</td>
-                    <td>rich</td>
-                    <td>data</td>
-                </tr>
-                <tr>
-                    <td>1,015</td>
-                    <td>random</td>
-                    <td>tabular</td>
-                    <td>information</td>
                     <td>text</td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
+
+        <div class="col-6" style="background-color: crimson; height: 100px"></div>
+        <div class="col-6">
+            <canvas class="my-4" id="myChart"></canvas>
+        </div>
+
     </main>
 
 {% endblock %}
 
 {% block js %}
+    {{ block.super }}
     {% load static %}
     <script src="{% static 'dashboard/dashboard.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script>
+        const formats = ['years', 'months', 'days', 'hours', 'minutes']
+        const dateTime = luxon.DateTime
+        const boot_date = dateTime.fromSeconds({{ boot_time }})
+        const uptime_element = document.getElementById("uptime")
+        const server_time = document.getElementById("server_time")
+        const timezone = document.getElementById("timezone")
+
+        function update_uptime() {
+            const uptime = dateTime.now().diff(boot_date, formats)
+            let text = ""
+            let loop = 0
+            for (const key in uptime.values) {
+                loop += 1
+                let found = false
+                const num = Math.round(uptime[key])
+                if (!(num === 0) || found) {
+                    found = true
+                    const num = Math.round(uptime[key])
+                    text += `${num} ${key}`
+                    if (loop < formats.length) {
+                        text += `, `
+                    }
+                }
+            }
+            uptime_element.innerText = text
+
+        }
+
+        function update_server_time() {
+            const time = dateTime.now().setZone('{{ time_zone }}')
+            server_time.innerText = time.toLocaleString({
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric'
+            })
+        }
+
+        function update_data() {
+            update_server_time()
+            update_uptime()
+        }
+
+        update_server_time()
+        update_uptime()
+        setInterval(update_data, 60 * 1000)
+
+        const _time = dateTime.now().setZone('{{ time_zone }}')
+        timezone.innerText = `UTC${_time.offset / 60}`
+
+
+    </script>
 {% endblock %}
