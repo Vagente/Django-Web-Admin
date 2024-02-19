@@ -3,6 +3,8 @@ from pathlib import Path
 import shutil
 from functools import wraps
 import re
+import bisect
+from django.conf import settings
 
 
 def is_valid_filename(name) -> bool:
@@ -14,12 +16,25 @@ def is_valid_filename(name) -> bool:
     return True
 
 
+def _get_files(path):
+    res = [list(), list()]
+    for i in os.scandir(path):
+        stat = i.stat(follow_symlinks=False)
+        if i.is_dir(follow_symlinks=False):
+            bisect.insort(res[0], (i.name, True, stat.st_size, stat.st_mtime), key=lambda x: x[0])
+        else:
+            bisect.insort(res[1], (i.name, False, stat.st_size, stat.st_mtime), key=lambda x: x[0])
+    return res
+
+
 def _resolve_path(should_exist, idxes=(1,)):
     """
-    Returns a decorator. args[0] should be self which is a Filemanager, args[idx] should be path
+    Returns a decorator.
+    args[0] should be self which is a Filemanager.
+    should_exit should be iterable of bool, corresponding to idx in idxes, which should be path in args.
+    args[idx] should be path
     Will replace path with None if path is not valid(not a sub path of the root path or contain invalid characters)
-    If should_exist is True, will replace with None if path didn't exist
-    else will replace with None if path exists(for creating new files/folders).
+    will return False if should_exit != args[idx].exists()
     """
 
     def decorator(func):
@@ -46,21 +61,20 @@ def _resolve_path(should_exist, idxes=(1,)):
 
 
 class FileManager(object):
-    def __init__(self, root_path):
-        self.root = Path(root_path)
-        if not self.root.is_absolute() or not self.root.exists() or not self.root.is_dir():
-            raise ValueError
+    def __init__(self, root_path=settings.FILE_MANAGER_ROOT_PATH):
+        self.root = Path(str(root_path))
+        if not self.root.is_absolute() or not self.root.exists() or not self.root.is_dir() or self.root.is_symlink():
+            raise ValueError("Invalid root path")
         self.current_path = self.root
+
+    def list_root_files(self):
+        return _get_files(self.root)
 
     @_resolve_path((True,))
     def list_files(self, path: Path):
         if not path.is_dir() or path.is_symlink():
             return False
-        res = []
-        for i in os.scandir(path):
-            stat = i.stat(follow_symlinks=False)
-            res.append((i.name, i.is_dir(follow_symlinks=False), stat.st_size, stat.st_mtime))
-        return tuple(res)
+        return _get_files(path)
 
     @_resolve_path((True,))
     def change_current_path(self, path: Path) -> bool:

@@ -29,6 +29,7 @@ LOGIN_URL = '/login'
 OTP_LOGIN_URL = '/login/otp'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login'
+FILE_MANAGER_ROOT_PATH = '/home/vagente/djangoWeb_media'
 # Application definition
 
 INSTALLED_APPS = [
