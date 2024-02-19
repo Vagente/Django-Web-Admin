@@ -73,8 +73,13 @@
                                     Terminal
                                 </a>
                             </li>
+                        </ul>
+
+                        <hr class="my-3">
+
+                        <ul class="nav flex-column mb-auto">
                             <li class="nav-item">
-                                <form id="logout_form" method="post" action="{% url 'logout' %}">
+                                <form method="post" action="{% url 'logout' %}">
                                     {% csrf_token %}
                                     <div class="d-grid">
                                         <button class="nav-link d-flex align-items-center gap-2" type="submit">log out

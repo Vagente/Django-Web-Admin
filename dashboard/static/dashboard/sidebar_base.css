@@ -8,12 +8,15 @@ body {
     background-color: #1e1e1e;
 }
 
+.sidebar .nav-item button:hover {
+    background-color: darkred;
+}
+
 .sidebar .nav-item .nav-link {
     color: white;
     border-radius: 0.375rem;
     margin: 0.1rem 0.5rem 0.1rem 0.5rem;
 }
-
 
 .sidebar .nav-link.active, .nav-link:hover {
     background-color: #483d8b;
