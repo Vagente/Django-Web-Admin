@@ -15,6 +15,12 @@
             </symbol>
         </svg>
 
+        <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+            <symbol id="file-embark-fill" viewBox="0 0 16 16">
+                <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"></path>
+            </symbol>
+        </svg>
+
         <div>
             <table class="table table-hover">
                 <thead>
@@ -25,32 +31,23 @@
                     <th scope="col">size</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <th scope="row">
-                        <svg class="bi">
-                            <use href="#folder-fill"></use>
-                        </svg>
-                        1
-                    </th>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>@mdo</td>
-                </tr>
-                <tr>
-                    <th scope="row">2</th>
-                    <td>Jacob</td>
-                    <td>Thornton</td>
-                    <td>@fat</td>
-                </tr>
-                <tr>
-                    <th scope="row">3</th>
-                    <td colspan="2">Larry the Bird</td>
-                    <td>@twitter</td>
-                </tr>
+                <tbody id="table_body">
                 </tbody>
             </table>
         </div>
     </main>
 
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    {% load static %}
+    <script src="{% static 'file_manager/file_manager.js' %}"></script>
+    <script>
+        const arr = JSON.parse(decodeHtml('{{ all_files }}'))
+        update_table(arr)
+
+
+    </script>
 {% endblock %}

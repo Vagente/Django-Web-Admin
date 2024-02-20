@@ -1,3 +1,7 @@
 .row {
     height: 100vh;
 }
+
+tr th svg {
+    margin-right: 0.5rem;
+}
