@@ -56,7 +56,8 @@ def _resolve_path(should_exist, idxes=(1,)):
                     return False
                 p = self.root / p
                 args[idx] = p
-                assert Path('/home/vagente/djangoWeb_media') in p.parents
+                if settings.DEBUG:
+                    assert Path('/home/vagente/djangoWeb_media') in p.parents
             return func(*args, **kwargs)
 
         return wrapper
