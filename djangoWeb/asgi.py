@@ -17,6 +17,7 @@ from xterm.routing import websocket_urlpatterns as xterm_urlpatterns
 from file_manager.routing import websocket_urlpatterns as file_manager_ws_urlpatterns
 from dashboard.middleware import OTPAuthMiddleware
 
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangoWeb.settings')
 
 django_asgi_app = get_asgi_application()
@@ -25,9 +26,7 @@ application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(OTPAuthMiddleware(URLRouter([
-                xterm_urlpatterns, file_manager_ws_urlpatterns
-            ])))
+            AuthMiddlewareStack(OTPAuthMiddleware(URLRouter(xterm_urlpatterns + file_manager_ws_urlpatterns)))
         ),
     }
 )
