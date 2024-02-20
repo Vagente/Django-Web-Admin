@@ -16,14 +16,17 @@ def is_valid_filename(name) -> bool:
     return True
 
 
-def _get_files(path):
+def _list_files(path):
     res = [list(), list()]
     for i in os.scandir(path):
         stat = i.stat(follow_symlinks=False)
+        name = i.name
         if i.is_dir(follow_symlinks=False):
-            bisect.insort(res[0], (i.name, True, stat.st_size, stat.st_mtime), key=lambda x: x[0])
+            bisect.insort(res[0], [name, stat.st_mtime, 'folder', stat.st_size], key=lambda x: x[0])
         else:
-            bisect.insort(res[1], (i.name, False, stat.st_size, stat.st_mtime), key=lambda x: x[0])
+            t = Path(i.name).suffix
+            t = t if t != "" else 'file'
+            bisect.insort(res[1], [name, stat.st_mtime, t, stat.st_size], key=lambda x: x[0])
     return res
 
 
@@ -53,6 +56,7 @@ def _resolve_path(should_exist, idxes=(1,)):
                     return False
                 p = self.root / p
                 args[idx] = p
+                assert Path('/home/vagente/djangoWeb_media') in p.parents
             return func(*args, **kwargs)
 
         return wrapper
@@ -68,13 +72,13 @@ class FileManager(object):
         self.current_path = self.root
 
     def list_root_files(self):
-        return _get_files(self.root)
+        return _list_files(self.root)
 
     @_resolve_path((True,))
     def list_files(self, path: Path):
         if not path.is_dir() or path.is_symlink():
             return False
-        return _get_files(path)
+        return _list_files(path)
 
     @_resolve_path((True,))
     def change_current_path(self, path: Path) -> bool:
