@@ -70,7 +70,6 @@ class FileManager(object):
         self.root = Path(str(root_path))
         if not self.root.is_absolute() or not self.root.exists() or not self.root.is_dir() or self.root.is_symlink():
             raise ValueError("Invalid root path")
-        self.current_path = self.root
 
     def list_root_files(self):
         return _list_files(self.root)
@@ -80,13 +79,6 @@ class FileManager(object):
         if not path.is_dir() or path.is_symlink():
             return False
         return _list_files(path)
-
-    @_resolve_path((True,))
-    def change_current_path(self, path: Path) -> bool:
-        if not path.is_dir() or path.is_symlink():
-            return False
-        self.current_path = path
-        return True
 
     @_resolve_path((False,))
     def touch(self, path: Path) -> bool:
