@@ -2,6 +2,34 @@
     height: 100vh;
 }
 
+tr th {
+    user-select: none;
+}
+
 tr th svg {
     margin-right: 0.5rem;
+}
+
+#file_path li {
+    border: None;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#file_path li a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#file_path li button:hover {
+    background-color: #191c1f;
+}
+
+#file_path svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+div header ol {
+    max-width: 100%;
 }

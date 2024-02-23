@@ -17,11 +17,39 @@
 
         <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
             <symbol id="file-embark-fill" viewBox="0 0 16 16">
-                <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"></path>
+                <path fill-rule="evenodd"
+                      d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"></path>
+            </symbol>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+            <symbol id="chevron-right" viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                      d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"></path>
+            </symbol>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+            <symbol id="dots" viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                      d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"></path>
             </symbol>
         </svg>
 
+
         <div>
+            <div id="bar" class="progress" role="progressbar">
+                <div id="progress" class="progress-bar progress-bar-striped progress-bar-animated"
+                     style="width: 25%">loading
+                </div>
+            </div>
+            <header class="navbar sticky-top bg-dark p-0 shadow overflow-x-scroll" data-bs-theme="dark">
+                <div>
+                    <ol id="file_path" class="list-group text-nowrap list-group-horizontal">
+                        <li class="list-group-item">
+                            <button class="btn">Root</button>
+                        </li>
+                    </ol>
+                </div>
+            </header>
             <table class="table table-hover">
                 <thead>
                 <tr>
@@ -29,6 +57,7 @@
                     <th scope="col">Last modified</th>
                     <th scope="col">type</th>
                     <th scope="col">size</th>
+                    <th scope="col"></th>
                 </tr>
                 </thead>
                 <tbody id="table_body">
@@ -45,9 +74,61 @@
     {% load static %}
     <script src="{% static 'file_manager/file_manager.js' %}"></script>
     <script>
-        const arr = JSON.parse(decodeHtml('{{ all_files }}'))
-        update_table(arr)
+        const socket = new WebSocket(
+            'wss://localhost/ws/file_manager/'
+        )
 
+        let _current_path = [];
+        let _last_path = []
+
+        function list_folder(path) {
+            socket.send(JSON.stringify([{{ list_file }}, [path.join('/')]]))
+        }
+
+        function change_path(path) {
+            _current_path = path
+            clear_file_path()
+            update_file_path(path)
+        }
+
+        socket.onopen = function () {
+            list_folder(_current_path)
+            progress('75%')
+        }
+
+        socket.onmessage = function (event) {
+            let data = event.data
+            try {
+                data = JSON.parse(event.data);
+                if (data[0] === {{ list_file }}) {
+                    progress('100%')
+                    if (data[1]) {
+                        _last_path = _current_path
+                        update_table(data[2])
+                    } else {
+                        change_path(_last_path)
+                        list_folder(_current_path)
+                        alert(data[2])
+                    }
+                    progress('0%')
+                }
+            } catch (e) {
+                alert(e)
+            }
+        }
+
+        function folder_dblclick(name) {
+            function event_handler(event) {
+                progress('25%')
+                table_element.innerText = '';
+                _current_path.push(name)
+                change_path(_current_path)
+                list_folder(_current_path)
+                progress('75%')
+            }
+
+            return event_handler
+        }
 
     </script>
 {% endblock %}
