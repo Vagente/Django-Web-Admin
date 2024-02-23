@@ -52,9 +52,9 @@ def _resolve_path(should_exist, idxes=(1,)):
                 for j in p.parts:
                     if not is_valid_filename(j):
                         return False, f'Invalid filename: {j}'
+                p = self.root / p
                 if should_exist[i] != p.exists():
                     return False, f"Path {str(p)} existence should be {should_exist[i]}"
-                p = self.root / p
                 args[idx] = p
                 if settings.DEBUG:
                     assert Path('/home/vagente/djangoWeb_media') in p.parents
