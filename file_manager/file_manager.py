@@ -77,11 +77,14 @@ class FileManager(object):
         if not self.root.is_absolute() or not self.root.exists() or not self.root.is_dir() or self.root.is_symlink():
             raise ValueError("Invalid root path")
 
-    def list_root_files(self):
-        return True, _list_files(self.root)
+    def list_files(self, path):
+        if str(path) is '':
+            return True, _list_files(self.root)
+        else:
+            return self._list_files(path)
 
     @_resolve_path((True,))
-    def list_files(self, path: Path):
+    def _list_files(self, path: Path):
         if not path.is_dir() or path.is_symlink():
             return False, f"Not a directory: {path.name}"
         return True, _list_files(path)

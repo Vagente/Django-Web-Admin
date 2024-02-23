@@ -10,9 +10,8 @@ class FileManagerConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         manager = FileManager()
-        self.funcs = [manager.list_files, manager.list_root_files, manager.touch,
-                      manager.delete_file, manager.copy_file, manager.move, manager.copy_dir, manager.mkdir,
-                      manager.delete_folder]
+        self.funcs = [manager.list_files, manager.touch, manager.delete_file, manager.copy_file, manager.move,
+                      manager.copy_dir, manager.mkdir, manager.delete_folder]
 
     def receive(self, text_data=None, bytes_data=None):
         try:
@@ -23,12 +22,12 @@ class FileManagerConsumer(WebsocketConsumer):
             data_args = arr[DATA_ARGS]
 
             if 0 <= data_type <= DELETE_DIR:
-                res = self.funcs[data_type](*data_args)
-                self.send(json.dumps([data_type, res]))
+                status, res = self.funcs[data_type](*data_args)
+                self.send(json.dumps([data_type, status, res]))
             else:
                 print("Invalid data type")
         except json.decoder.JSONDecodeError:
-            raise ValueError
+            print('value error')
 
     def connect(self):
         if not self.scope["user"].is_verified() or not self.scope["user"].is_superuser:
