@@ -80,7 +80,8 @@ function update_table(input) {
             let use = document.createElementNS("http://www.w3.org/2000/svg", "use");
             let id = ids[idx];
             use.setAttribute("href", id);
-            let text = document.createTextNode(files[i][0]);
+            const name = files[i][0]
+            let text = document.createTextNode(name);
 
             th.appendChild(svg).appendChild(use);
             th.appendChild(text);
@@ -95,15 +96,91 @@ function update_table(input) {
             if (idx === 0) {
                 tr.addEventListener("dblclick", folder_dblclick(text.textContent))
             }
+
+            // Dots dropdown
             let td = document.createElement('td')
+            let div = document.createElement('div')
+            div.classList.add('dropstart')
+            div.addEventListener('dblclick', (e) => {
+                e.stopPropagation()
+            })
             let dot_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             dot_svg.classList.add('bi')
+            dot_svg.classList.add('dropdown-toggle')
+            dot_svg.classList.add('dot_svg')
+            dot_svg.setAttribute('data-bs-toggle', 'dropdown')
             let dot_use = document.createElementNS("http://www.w3.org/2000/svg", "use");
             dot_use.setAttribute('href', '#dots')
-            td.appendChild(dot_svg).appendChild(dot_use)
+            div.appendChild(dot_svg).appendChild(dot_use)
+            let ul = document.createElement("ul")
+            ul.classList.add('dropdown-menu')
+            const dropdown_names = ['move']
+            for (let j = 0; j < 1; j++) {
+                let li = document.createElement('li')
+                let button = document.createElement('button')
+                button.classList.add('dropdown-item')
+                button.textContent = dropdown_names[j]
+                button.setAttribute('data-bs-toggle', 'modal')
+                button.setAttribute('data-bs-target', '#dropdown_modal')
+                button.setAttribute('data-bs-path', _current_path.concat([name]).join('/'))
+                button.setAttribute('data-bs-function', dropdown_names[j])
+                li.appendChild(button)
+                ul.appendChild(li)
+            }
+            ul.addEventListener('contextmenu', (e) => {
+                e.stopPropagation()
+            })
+            div.appendChild(ul)
+            td.appendChild(div)
+            tr.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const x = e.clientX
+                const y = e.clientY
+                const dropdown = new bootstrap.Dropdown(dot_svg)
+                dropdown.show()
+                ul.style.transform = null
+                ul.style.margin = null
+                ul.style.position = 'fixed'
+                ul.style.inset = `${y}px auto auto ${x}px`
+                // ul.classList.add('show')
+            })
             tr.appendChild(td)
 
             table_element.appendChild(tr)
         }
     }
 }
+
+const modal = document.getElementById("dropdown_modal")
+const input_field = document.getElementById('modal_input')
+const confirm = modal.querySelector('.modal-footer button')
+modal.addEventListener('show.bs.modal', event => {
+    const input_funcs = ['move']
+    const all_funcs = [move_file]
+    const button = event.relatedTarget;
+    const path = button.getAttribute('data-bs-path')
+    const func_name = button.getAttribute('data-bs-function')
+    const title = modal.querySelector('.modal-header h1')
+    title.textContent = func_name + ' file'
+    input_field.value = path
+    confirm.onclick = () => {
+        for (let i = 0; i < 1; i++) {
+            if (input_funcs[i] === func_name) {
+                all_funcs[i]([path, input_field.value])
+            }
+        }
+    }
+})
+
+input_field.addEventListener("keyup", function (event) {
+    console.log(event)
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        confirm.click();
+    }
+});
+
+modal.addEventListener('shown.bs.modal', () => {
+    input_field.focus()
+    input_field.select()
+})

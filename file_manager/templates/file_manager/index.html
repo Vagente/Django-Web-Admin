@@ -8,13 +8,13 @@
 
 {% block main %}
     <main class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
+
         <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
             <symbol id="folder-fill" viewBox="0 0 16 16" style="color: #ffd45e">
                 <path fill-rule="evenodd"
                       d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3m-8.322.12q.322-.119.684-.12h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981z"></path>
             </symbol>
         </svg>
-
         <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
             <symbol id="file-embark-fill" viewBox="0 0 16 16">
                 <path fill-rule="evenodd"
@@ -34,11 +34,32 @@
             </symbol>
         </svg>
 
+        <div class="modal" id="dropdown_modal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5">Move file</h1>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="modal_input" class="col-form-label">Destination Path (eg: my folder/other
+                                folders) leave empty for root folder</label>
+                            <input type="text" class="form-control" id="modal_input">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <div>
             <div id="bar" class="progress" role="progressbar">
-                <div id="progress" class="progress-bar progress-bar-striped progress-bar-animated"
-                     style="width: 25%">loading
+                <div id="progress" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 25%">
+                    loading
                 </div>
             </div>
             <header class="navbar sticky-top bg-dark p-0 shadow overflow-x-scroll" data-bs-theme="dark">
@@ -85,6 +106,11 @@
             socket.send(JSON.stringify([{{ list_file }}, [path.join('/')]]))
         }
 
+        function move_file(args) {
+            socket.send(JSON.stringify([{{ move_file }}, args]))
+        }
+
+
         function change_path(path) {
             _current_path = path
             clear_file_path()
@@ -97,24 +123,37 @@
         }
 
         socket.onmessage = function (event) {
+            progress('100%')
             let data = event.data
             try {
                 data = JSON.parse(event.data);
-                if (data[0] === {{ list_file }}) {
-                    progress('100%')
-                    if (data[1]) {
+                let data_type = data[0]
+                let res = data[1]
+                let content = data[2]
+                if (data_type === {{ list_file }}) {
+
+                    if (res) {
                         _last_path = _current_path
-                        update_table(data[2])
+                        update_table(content)
                     } else {
                         change_path(_last_path)
                         list_folder(_current_path)
-                        alert(data[2])
+                        alert(content)
                     }
-                    progress('0%')
+
+                } else if (data_type === {{ move_file }}) {
+                    if (res) {
+                        alert('success')
+                        list_folder(_current_path)
+                    } else {
+                        alert(content)
+                        list_folder(_current_path)
+                    }
                 }
             } catch (e) {
                 alert(e)
             }
+            progress('0%')
         }
 
         function folder_dblclick(name) {
@@ -130,5 +169,6 @@
             return event_handler
         }
 
+        progress('75%')
     </script>
 {% endblock %}

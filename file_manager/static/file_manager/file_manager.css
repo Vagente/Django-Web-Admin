@@ -2,7 +2,7 @@
     height: 100vh;
 }
 
-tr th {
+tr{
     user-select: none;
 }
 
@@ -32,4 +32,16 @@ tr th svg {
 
 div header ol {
     max-width: 100%;
+}
+
+.dot_svg {
+    cursor: pointer;
+}
+
+.dot_svg:hover {
+    background-color: #1e1e1e;
+}
+
+#progress {
+    transition: 0.05s;
 }
