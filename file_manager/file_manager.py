@@ -7,10 +7,17 @@ import bisect
 from django.conf import settings
 
 
+def _check_parents(p):
+    for path in p.parents:
+        if path.is_symlink() or not path.exists():
+            return False
+    return True
+
+
 def is_valid_filename(name) -> bool:
     if type(name) is not str:
         return False
-    s = re.fullmatch(r"[-\w.]+", name)
+    s = re.fullmatch(r"[-\w. ]+", name)
     if s is None or name in {"", ".", ".."}:
         return False
     return True
@@ -43,18 +50,24 @@ def _resolve_path(should_exist, idxes=(1,)):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            if settings.DEBUG:
+                print(args)
             self = args[0]
             if 0 in idxes:
                 raise ValueError(f"0 shouldn't be in idxes: {idxes}")
             args = list(args)
             for i, idx in enumerate(idxes):
-                p = Path(str(args[idx]))
-                for j in p.parts:
+                partial = Path(str(args[idx]))
+                for j in partial.parts:
                     if not is_valid_filename(j):
-                        return False, f'Invalid filename: {j}'
-                p = self.root / p
+                        return False, f"Invalid filename: '{j}'"
+                p = self.root / partial
                 if should_exist[i] != p.exists():
-                    return False, f"Path {str(p)} existence should be {should_exist[i]}"
+                    return False, f"Path '{str(partial)}' existence should be {should_exist[i]}"
+
+                if not should_exist and _check_parents(p):
+                    return f"Path '{str(partial)}' contains invalid item(symlink or didn't exist"
+
                 args[idx] = p
                 if settings.DEBUG:
                     assert Path('/home/vagente/djangoWeb_media') in p.parents
@@ -73,12 +86,12 @@ def _resolve_path(should_exist, idxes=(1,)):
 
 class FileManager(object):
     def __init__(self, root_path=settings.FILE_MANAGER_ROOT_PATH):
-        self.root = Path(str(root_path))
+        self.root = Path(str(root_path)).resolve()
         if not self.root.is_absolute() or not self.root.exists() or not self.root.is_dir() or self.root.is_symlink():
             raise ValueError("Invalid root path")
 
     def list_files(self, path):
-        if str(path) is '':
+        if str(path) == '':
             return True, _list_files(self.root)
         else:
             return self._list_files(path)
@@ -91,8 +104,6 @@ class FileManager(object):
 
     @_resolve_path((False,))
     def touch(self, path: Path) -> (bool, str):
-        if not path.parent.exists():
-            return False, f'parent: {str(path.parent)} does not exist'
         try:
             path.touch(exist_ok=False)
         except FileExistsError:
@@ -113,8 +124,6 @@ class FileManager(object):
 
     @_resolve_path((True, False), (1, 2))
     def move(self, old_path: Path, new_path: Path) -> (bool, str):
-        if not new_path.is_dir() or new_path.is_symlink():
-            return False, f"New path is not a directory: {new_path.name}"
         shutil.move(old_path, new_path)
         return True, None
 
