@@ -112,10 +112,11 @@ function update_table(input) {
             let dot_use = document.createElementNS("http://www.w3.org/2000/svg", "use");
             dot_use.setAttribute('href', '#dots')
             div.appendChild(dot_svg).appendChild(dot_use)
+
             let ul = document.createElement("ul")
             ul.classList.add('dropdown-menu')
-            const dropdown_names = ['move']
-            for (let j = 0; j < 1; j++) {
+            const dropdown_names = ['move', 'copy', 'delete']
+            for (let j = 0; j < dropdown_names.length; j++) {
                 let li = document.createElement('li')
                 let button = document.createElement('button')
                 button.classList.add('dropdown-item')
@@ -132,20 +133,7 @@ function update_table(input) {
             })
             div.appendChild(ul)
             td.appendChild(div)
-            tr.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                const x = e.clientX
-                const y = e.clientY
-                const dropdown = new bootstrap.Dropdown(dot_svg)
-                dropdown.show()
-                ul.style.transform = null
-                ul.style.margin = null
-                ul.style.position = 'fixed'
-                ul.style.inset = `${y}px auto auto ${x}px`
-                // ul.classList.add('show')
-            })
             tr.appendChild(td)
-
             table_element.appendChild(tr)
         }
     }
@@ -155,21 +143,27 @@ const modal = document.getElementById("dropdown_modal")
 const input_field = document.getElementById('modal_input')
 const confirm = modal.querySelector('.modal-footer button')
 modal.addEventListener('show.bs.modal', event => {
-    const input_funcs = ['move']
-    const all_funcs = [move_file]
+    const input_funcs = ['move', 'copy']
     const button = event.relatedTarget;
     const path = button.getAttribute('data-bs-path')
     const func_name = button.getAttribute('data-bs-function')
     const title = modal.querySelector('.modal-header h1')
-    title.textContent = func_name + ' file'
+    const body = modal.querySelector('.modal-body')
+    title.textContent = func_name + ' file: ' + path
     input_field.value = path
-    confirm.onclick = () => {
-        for (let i = 0; i < 1; i++) {
-            if (input_funcs[i] === func_name) {
-                all_funcs[i]([path, input_field.value])
-            }
+    if (input_funcs.includes(func_name)) {
+        body.removeAttribute('hidden')
+        confirm.onclick = () => {
+            file_operations(func_name)([path, input_field.value])
+        }
+    } else {
+        body.setAttribute('hidden', 'true')
+        confirm.onclick = () => {
+            file_operations(func_name)([path])
         }
     }
+
+
 })
 
 input_field.addEventListener("keyup", function (event) {

@@ -106,8 +106,18 @@
             socket.send(JSON.stringify([{{ list_file }}, [path.join('/')]]))
         }
 
-        function move_file(args) {
-            socket.send(JSON.stringify([{{ move_file }}, args]))
+        function file_operations(func) {
+            let functions = {
+                'move': {{ move_file }},
+                'copy': {{ copy_file }},
+                'delete': {{ delete_file }}
+            }
+
+            function _func(args) {
+                socket.send(JSON.stringify([functions[func], args]))
+            }
+
+            return _func
         }
 
 
@@ -141,7 +151,10 @@
                         alert(content)
                     }
 
-                } else if (data_type === {{ move_file }}) {
+                } else if (data_type === {{ move_file }} ||
+                    data_type === {{ copy_file }} ||
+                    data_type === {{ delete_file }}
+                ) {
                     if (res) {
                         alert('success')
                         list_folder(_current_path)
