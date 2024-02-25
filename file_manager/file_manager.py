@@ -62,7 +62,7 @@ def _resolve_path(should_exist, idxes=(1,)):
                     if not is_valid_filename(j):
                         return False, f"Invalid filename: '{j}'"
                 p = self.root / partial
-                if should_exist[i] != p.exists():
+                if should_exist[i] != p.exists() and should_exist[i] is not None:
                     return False, f"Path '{str(partial)}' existence should be {should_exist[i]}"
 
                 if not should_exist and _check_parents(p):
@@ -75,13 +75,35 @@ def _resolve_path(should_exist, idxes=(1,)):
                 res = func(*args, **kwargs)
             except PermissionError:
                 return False, 'Permission denied'
-            except OSError:
-                return False, 'OSError'
             return res
 
         return wrapper
 
     return decorator
+
+
+def _copy_dir(src_path: Path, dest_path: Path) -> (bool, str):
+    shutil.copytree(src_path, dest_path, symlinks=True)
+    return True, None
+
+
+def _delete_folder(path: Path) -> (bool, str):
+    if not shutil.rmtree.avoids_symlink_attacks:
+        return False, f"Platform is vulnerable to symlink attacks"
+    shutil.rmtree(path, True)
+    return True, None
+
+
+def _delete_file(path: Path):
+    path.unlink(missing_ok=True)
+    return True, None
+
+
+def _copy_file(src: Path, dest: Path) -> (bool, str):
+    if not dest.is_dir() or dest.is_symlink():
+        return False, f"dest is not a directory: {dest.name}"
+    shutil.copy(src, dest, follow_symlinks=False)
+    return True, None
 
 
 class FileManager(object):
@@ -111,40 +133,31 @@ class FileManager(object):
         return True, None
 
     @_resolve_path((True, True), (1, 2))
-    def copy_file(self, src: Path, dest: Path) -> (bool, str):
-        if not dest.is_dir() or dest.is_symlink():
-            return False, f"dest is not a directory: {dest.name}"
-        shutil.copy(src, dest, follow_symlinks=False)
-        return True, None
+    def copy(self, src: Path, dest: Path):
+        if dest.is_file() or dest.is_symlink():
+            return False, f"destination if not a dir: {dest.name}"
+        if src.is_dir():
+            return _copy_dir(src, dest / src.name)
+        else:
+            return _copy_file(src, dest)
 
     @_resolve_path((True,))
-    def delete_file(self, path: Path):
-        path.unlink(missing_ok=True)
-        return True, None
+    def delete(self, path: Path):
+        if path.is_dir() and not path.is_symlink():
+            return _delete_folder(path)
+        else:
+            return _delete_file(path)
 
-    @_resolve_path((True, False), (1, 2))
+    @_resolve_path((True, None), (1, 2))
     def move(self, old_path: Path, new_path: Path) -> (bool, str):
+        if new_path.exists() and new_path.is_symlink():
+            return False, f"new_path is a symlink"
+        if new_path.exists() and not new_path.is_dir():
+            return False, f"new_path exists"
         shutil.move(old_path, new_path)
-        return True, None
-
-    @_resolve_path((True, False), (1, 2))
-    def copy_dir(self, src_path: Path, dest_path: Path) -> (bool, str):
-        if not src_path.is_dir() or not dest_path.is_dir() or src_path.is_symlink() or dest_path.is_symlink():
-            return False, f"src or dest is not directory"
-        shutil.copytree(src_path, dest_path, symlinks=True)
         return True, None
 
     @_resolve_path((False,))
     def mkdir(self, path: Path) -> (bool, str):
-        try:
-            path.mkdir()
-        except FileNotFoundError:
-            return False, f"path parent didn't exist"
-        return True, None
-
-    @_resolve_path((True,))
-    def delete_folder(self, path: Path) -> (bool, str):
-        if not shutil.rmtree.avoids_symlink_attacks:
-            return False, f"Platform is vulnerable to symlink attacks"
-        shutil.rmtree(path, True)
+        path.mkdir()
         return True, None
