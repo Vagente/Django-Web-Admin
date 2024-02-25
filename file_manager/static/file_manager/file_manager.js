@@ -75,6 +75,7 @@ function update_table(input) {
             let tr = document.createElement("tr");
             let th = document.createElement("th");
             th.setAttribute("scope", "row");
+            th.classList.add('text-truncate')
             let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("class", "bi");
             let use = document.createElementNS("http://www.w3.org/2000/svg", "use");
@@ -144,21 +145,37 @@ const input_field = document.getElementById('modal_input')
 const confirm = modal.querySelector('.modal-footer button')
 modal.addEventListener('show.bs.modal', event => {
     const input_funcs = ['move', 'copy']
+    const single_input = ["create_folder", "create_file"]
     const button = event.relatedTarget;
-    const path = button.getAttribute('data-bs-path')
+    let path = button.getAttribute('data-bs-path')
+    if (path === '.') {
+        path = _current_path
+    }
     const func_name = button.getAttribute('data-bs-function')
     const title = modal.querySelector('.modal-header h1')
     const body = modal.querySelector('.modal-body')
     title.textContent = func_name + ' file: ' + path
-    input_field.value = path
+    let args = null
     if (input_funcs.includes(func_name)) {
+        args = [path]
+    } else if (single_input.includes(func_name)) {
+        args = []
+    }
+    if (args != null) {
+        input_field.value = ''
+        let label = modal.querySelector('label')
+        label.textContent = 'Name or path(relative to current path)'
         body.removeAttribute('hidden')
         confirm.onclick = () => {
-            file_operations(func_name)([path, input_field.value])
+            progress('25%')
+            args.push(_current_path.join('/') + '/' + input_field.value)
+            file_operations(func_name)(args)
         }
     } else {
+        input_field.value = path
         body.setAttribute('hidden', 'true')
         confirm.onclick = () => {
+            progress('25%')
             file_operations(func_name)([path])
         }
     }
@@ -167,7 +184,6 @@ modal.addEventListener('show.bs.modal', event => {
 })
 
 input_field.addEventListener("keyup", function (event) {
-    console.log(event)
     if (event.key === 'Enter') {
         event.preventDefault();
         confirm.click();

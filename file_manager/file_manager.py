@@ -50,8 +50,6 @@ def _resolve_path(should_exist, idxes=(1,)):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if settings.DEBUG:
-                print(args)
             self = args[0]
             if 0 in idxes:
                 raise ValueError(f"0 shouldn't be in idxes: {idxes}")
@@ -84,26 +82,26 @@ def _resolve_path(should_exist, idxes=(1,)):
 
 def _copy_dir(src_path: Path, dest_path: Path) -> (bool, str):
     shutil.copytree(src_path, dest_path, symlinks=True)
-    return True, None
+    return True, 'success'
 
 
 def _delete_folder(path: Path) -> (bool, str):
     if not shutil.rmtree.avoids_symlink_attacks:
         return False, f"Platform is vulnerable to symlink attacks"
     shutil.rmtree(path, True)
-    return True, None
+    return True, 'success'
 
 
 def _delete_file(path: Path):
     path.unlink(missing_ok=True)
-    return True, None
+    return True, 'success'
 
 
 def _copy_file(src: Path, dest: Path) -> (bool, str):
     if not dest.is_dir() or dest.is_symlink():
         return False, f"dest is not a directory: {dest.name}"
     shutil.copy(src, dest, follow_symlinks=False)
-    return True, None
+    return True, 'success'
 
 
 class FileManager(object):
@@ -130,7 +128,7 @@ class FileManager(object):
             path.touch(exist_ok=False)
         except FileExistsError:
             return False, f'File {path.name} exists'
-        return True, None
+        return True, 'success'
 
     @_resolve_path((True, True), (1, 2))
     def copy(self, src: Path, dest: Path):
@@ -155,9 +153,9 @@ class FileManager(object):
         if new_path.exists() and not new_path.is_dir():
             return False, f"new_path exists"
         shutil.move(old_path, new_path)
-        return True, None
+        return True, 'success'
 
     @_resolve_path((False,))
     def mkdir(self, path: Path) -> (bool, str):
         path.mkdir()
-        return True, None
+        return True, 'success'

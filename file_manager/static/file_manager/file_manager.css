@@ -2,12 +2,17 @@
     height: 100vh;
 }
 
-tr{
+tr {
     user-select: none;
 }
 
-tr th svg {
+.table tr th svg {
     margin-right: 0.5rem;
+}
+
+
+.table {
+    table-layout: fixed;
 }
 
 #file_path li {

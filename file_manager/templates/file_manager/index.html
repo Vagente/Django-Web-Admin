@@ -39,12 +39,12 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5">Move file</h1>
+                        <h1 class="modal-title fs-5 text-truncate">Move file</h1>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="modal_input" class="col-form-label">Destination Path (eg: my folder/other
-                                folders) leave empty for root folder</label>
+                                folders, leave empty for root folder)</label>
                             <input type="text" class="form-control" id="modal_input">
                         </div>
                     </div>
@@ -71,14 +71,20 @@
                     </ol>
                 </div>
             </header>
+            <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal" data-bs-path="."
+                    data-bs-function="create_folder">New Folder
+            </button>
+            <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal" data-bs-path="."
+                    data-bs-function="create_file">New File
+            </button>
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Last modified</th>
+                    <th class='col-6' scope="col">Name</th>
+                    <th class='col-2' scope="col">Last modified</th>
                     <th scope="col">type</th>
                     <th scope="col">size</th>
-                    <th scope="col"></th>
+                    <th class='col-1' scope="col"></th>
                 </tr>
                 </thead>
                 <tbody id="table_body">
@@ -110,11 +116,14 @@
             let functions = {
                 'move': {{ move_file }},
                 'copy': {{ copy_file }},
-                'delete': {{ delete_file }}
+                'delete': {{ delete_file }},
+                'create_folder': {{ make_dir }},
+                'create_file': {{ create_file }}
             }
 
             function _func(args) {
                 socket.send(JSON.stringify([functions[func], args]))
+                progress('75%')
             }
 
             return _func
@@ -140,8 +149,8 @@
                 let data_type = data[0]
                 let res = data[1]
                 let content = data[2]
+                let simple_funcs = [{{ move_file }}, {{ copy_file }}, {{ delete_file }}, {{ make_dir }}, {{ create_file }}]
                 if (data_type === {{ list_file }}) {
-
                     if (res) {
                         _last_path = _current_path
                         update_table(content)
@@ -150,18 +159,9 @@
                         list_folder(_current_path)
                         alert(content)
                     }
-
-                } else if (data_type === {{ move_file }} ||
-                    data_type === {{ copy_file }} ||
-                    data_type === {{ delete_file }}
-                ) {
-                    if (res) {
-                        alert('success')
-                        list_folder(_current_path)
-                    } else {
-                        alert(content)
-                        list_folder(_current_path)
-                    }
+                } else if (simple_funcs.includes(data_type)) {
+                    alert(content)
+                    list_folder(_current_path)
                 }
             } catch (e) {
                 alert(e)
