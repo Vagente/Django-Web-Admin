@@ -139,7 +139,7 @@ class XtermConsumer(WebsocketConsumer):
                 cols = data["cols"]
                 if type(rows) is int and type(cols) is int:
                     try:
-                        termios.tcsetwinsize(self.fd, (data["rows"], data["cols"]))
+                        termios.tcsetwinsize(self.fd, (rows, cols))
                     except Exception as e:
                         print(f"another error {e}")
 

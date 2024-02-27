@@ -1,13 +1,12 @@
 from django.shortcuts import render
-from file_manager.file_manager import FileManager
-import json
+from django_otp.decorators import otp_required
+
 from file_manager import *
 from .forms import UploadFileForm
-from .file_manager import _resolve_path
 
 
+@otp_required
 def file_manager(request):
-    manager = FileManager()
     # status, files = manager.list_root_files()
     context = {
         # 'all_files': json.dumps(files),
