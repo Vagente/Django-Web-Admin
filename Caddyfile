@@ -1,0 +1,14 @@
+localhost {
+	@websockets {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	reverse_proxy localhost:8000 {
+		header_up -HTTP_X_FORWARDED_PROTO
+		header_up +HTTP_X_FORWARDED_PROTO {https}
+	}
+	reverse_proxy @websockets localhost:8000 {
+		fail_duration 5s
+		unhealthy_request_count 100
+	}
+}
