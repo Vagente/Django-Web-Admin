@@ -168,7 +168,11 @@ modal.addEventListener('show.bs.modal', event => {
         body.removeAttribute('hidden')
         confirm.onclick = () => {
             progress('25%')
-            args.push(_current_path.join('/') + '/' + input_field.value)
+            let tmp = _current_path.join('/')
+            if (tmp !== ''){
+                tmp += '/'
+            }
+            args.push(tmp + input_field.value)
             file_operations(func_name)(args)
         }
     } else {
