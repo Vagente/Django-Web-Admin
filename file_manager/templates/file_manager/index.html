@@ -55,6 +55,24 @@
             </div>
         </div>
 
+        <div class="modal" id="dropdown_modal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5 text-truncate">Move file</h1>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post">
+                            {{ form }}
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div>
             <div id="bar" class="progress" role="progressbar">
@@ -77,6 +95,8 @@
             <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal" data-bs-path="."
                     data-bs-function="create_file">New File
             </button>
+
+
             <table class="table table-hover">
                 <thead>
                 <tr>

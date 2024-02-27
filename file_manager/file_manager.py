@@ -73,6 +73,9 @@ def _resolve_path(should_exist, idxes=(1,)):
                 res = func(*args, **kwargs)
             except PermissionError:
                 return False, 'Permission denied'
+            except OSError as e:
+                print(e)
+                return False, 'OSError'
             return res
 
         return wrapper
