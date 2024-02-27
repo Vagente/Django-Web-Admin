@@ -1,13 +1,17 @@
-from channels.generic.websocket import WebsocketConsumer
-import threading
+import fcntl
+import json
 import os
 import pty
-import select
-import termios
-import signal
-import time
-import json
 import pwd
+import select
+import signal
+import struct
+import termios
+import threading
+import time
+
+from channels.generic.websocket import WebsocketConsumer
+
 from .constants import *
 
 xterm_connections = 0
@@ -21,6 +25,11 @@ def valid_username(username):
         if shell != "nologin" and shell != "false" and p[0] == username:
             return True
     return False
+
+
+def set_winsize(fd, row, col, xpix=0, ypix=0):
+    winsize = struct.pack("HHHH", row, col, xpix, ypix)
+    fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 
 class XtermConsumer(WebsocketConsumer):
@@ -70,7 +79,7 @@ class XtermConsumer(WebsocketConsumer):
             os.waitpid(self.child_pid, 0)
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
-            term_env: dict = {"TERM": os.environ["TERM"]}
+            term_env: dict = {"TERM": 'xterm-256color'}
             os.chdir(os.path.expanduser("~" + username))
             os.execve("/bin/su", ("--login", username), term_env)
         self._child_alive = True
@@ -140,6 +149,7 @@ class XtermConsumer(WebsocketConsumer):
                 if type(rows) is int and type(cols) is int:
                     try:
                         termios.tcsetwinsize(self.fd, (rows, cols))
+                        # set_winsize(self.fd, rows, cols)
                     except Exception as e:
                         print(f"another error {e}")
 
@@ -151,4 +161,3 @@ class XtermConsumer(WebsocketConsumer):
                     self.send(json.dumps({JSON_TYPE: TYPE_INIT}))
         except KeyError or json.decoder.JSONDecodeError:
             return
-
