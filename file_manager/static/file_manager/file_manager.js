@@ -1,14 +1,15 @@
 const table_element = document.getElementById('table_body')
 const file_path_element = document.getElementById("file_path")
-const _bar = document.getElementById("bar")
-const _progress = document.getElementById("progress")
 
-function progress(n) {
-    _progress.style.width = n
-    if (n === '0%') {
-        _bar.style.display = 'none'
+
+function progress(n, id = "loading_bar") {
+    const bar = document.getElementById(id)
+    const progress = bar.querySelector('.progress-bar')
+    progress.style.width = n
+    if (n === '100%') {
+        bar.style.display = 'none'
     } else {
-        _bar.style.display = 'inherit'
+        bar.style.display = 'inherit'
     }
 }
 
@@ -169,7 +170,7 @@ modal.addEventListener('show.bs.modal', event => {
         confirm.onclick = () => {
             progress('25%')
             let tmp = _current_path.join('/')
-            if (tmp !== ''){
+            if (tmp !== '') {
                 tmp += '/'
             }
             args.push(tmp + input_field.value)
@@ -198,3 +199,56 @@ modal.addEventListener('shown.bs.modal', () => {
     input_field.focus()
     input_field.select()
 })
+
+const upload_form = document.getElementById('upload_form')
+
+async function upload_file(e) {
+    let csrf_input = e.target[0]
+    let data = new FormData()
+    let file = e.target[1].files[0]
+    data.append('file', file)
+    data.append(csrf_input.name, csrf_input.value)
+    const size = file.size
+
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", window.location.pathname);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader('Current-Path', _current_path)
+    xhr.onreadystatechange = () => {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status === 201){
+            alert("upload succeeded")
+            list_folder(_current_path)
+        }
+        else if (xhr.status === 400) {
+            const message = JSON.parse(xhr.responseText)
+            alert(message["message"])
+        } else
+            alert("upload failed with code " + xhr.status)
+    }
+    xhr.upload.addEventListener('progress', (e) => {
+        progress(e.loaded / e.total * 100 + "%", "upload_bar")
+    })
+    xhr.send(data);
+}
+
+upload_form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    // let csrf_input = e.target[0]
+    // let data = new FormData()
+    // let headers = new Headers()
+    // data.append('file', e.target[1].files[0])
+    // data.append(csrf_input.name, csrf_input.value)
+    // headers.append('Current-Path', _current_path)
+    // fetch(window.location.pathname, {
+    //     method: "POST",
+    //     body: data,
+    //     credentials: "same-origin",
+    //     headers: headers
+    // }).then((response) => {
+    //     console.log(response)
+    // })
+    upload_file(e).then()
+})
+

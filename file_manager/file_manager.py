@@ -1,9 +1,10 @@
+import bisect
 import os
-from pathlib import Path
+import re
 import shutil
 from functools import wraps
-import re
-import bisect
+from pathlib import Path
+
 from django.conf import settings
 
 
@@ -64,7 +65,7 @@ def _resolve_path(should_exist, idxes=(1,)):
                     return False, f"Path '{str(partial)}' existence should be {should_exist[i]}"
 
                 if not should_exist and _check_parents(p):
-                    return f"Path '{str(partial)}' contains invalid item(symlink or didn't exist"
+                    return f"Path '{str(partial)}' contains invalid path(symlink or didn't exist)"
 
                 args[idx] = p
                 if settings.DEBUG:
@@ -108,10 +109,14 @@ def _copy_file(src: Path, dest: Path) -> (bool, str):
 
 
 class FileManager(object):
-    def __init__(self, root_path=settings.FILE_MANAGER_ROOT_PATH):
-        self.root = Path(str(root_path)).resolve()
+    def __init__(self):
+        self.root = Path(str(settings.FILE_MANAGER_ROOT_PATH)).resolve()
         if not self.root.is_absolute() or not self.root.exists() or not self.root.is_dir() or self.root.is_symlink():
             raise ValueError("Invalid root path")
+
+    @_resolve_path((None,))
+    def get_path(self, path):
+        return path
 
     def list_files(self, path):
         if str(path) == '':
