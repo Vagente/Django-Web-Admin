@@ -79,7 +79,8 @@ class XtermConsumer(WebsocketConsumer):
             os.waitpid(self.child_pid, 0)
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
-            term_env: dict = {"TERM": 'xterm-256color'}
+            term = os.environ["TERM"] if "TERM" in os.environ else "xterm-256color"
+            term_env: dict = {"TERM": term}
             os.chdir(os.path.expanduser("~" + username))
             os.execve("/bin/su", ("--login", username), term_env)
         self._child_alive = True
