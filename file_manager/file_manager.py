@@ -53,7 +53,7 @@ def _valid_path(path, path_should_exist, root):
         return False, f"Path '{str(path)}' contains invalid path(symlink or didn't exist)"
 
     if settings.DEBUG:
-        assert Path('/home/vagente/djangoWeb_media') in p.parents
+        assert Path(settings.FILE_MANAGER_ROOT_PATH) in p.parents
     return True, p
 
 
