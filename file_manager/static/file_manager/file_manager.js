@@ -157,21 +157,26 @@ modal.addEventListener('show.bs.modal', event => {
     const body = modal.querySelector('.modal-body')
     title.textContent = func_name + ' file: ' + path
     let args = null
+    let message = 'Name or path(relative to current path)'
     if (input_funcs.includes(func_name)) {
         args = [path]
+        message = "Path(relative to root)"
     } else if (single_input.includes(func_name)) {
         args = []
     }
     if (args != null) {
         input_field.value = ''
         let label = modal.querySelector('label')
-        label.textContent = 'Name or path(relative to current path)'
+        label.textContent = message
         body.removeAttribute('hidden')
         confirm.onclick = () => {
             progress('25%')
-            let tmp = _current_path.join('/')
-            if (tmp !== '') {
-                tmp += '/'
+            let tmp = ''
+            if (args === []) {
+                tmp = _current_path.join('/')
+                if (tmp !== '') {
+                    tmp += '/'
+                }
             }
             args.push(tmp + input_field.value)
             file_operations(func_name)(args)
@@ -184,8 +189,6 @@ modal.addEventListener('show.bs.modal', event => {
             file_operations(func_name)([path])
         }
     }
-
-
 })
 
 input_field.addEventListener("keyup", function (event) {
@@ -216,11 +219,10 @@ async function upload_file(e) {
     xhr.setRequestHeader('Current-Path', _current_path)
     xhr.onreadystatechange = () => {
         if (xhr.readyState !== 4) return;
-        if (xhr.status === 201){
+        if (xhr.status === 201) {
             alert("upload succeeded")
             list_folder(_current_path)
-        }
-        else if (xhr.status === 400) {
+        } else if (xhr.status === 400) {
             const message = JSON.parse(xhr.responseText)
             alert(message["message"])
         } else
@@ -234,20 +236,6 @@ async function upload_file(e) {
 
 upload_form.addEventListener('submit', (e) => {
     e.preventDefault();
-    // let csrf_input = e.target[0]
-    // let data = new FormData()
-    // let headers = new Headers()
-    // data.append('file', e.target[1].files[0])
-    // data.append(csrf_input.name, csrf_input.value)
-    // headers.append('Current-Path', _current_path)
-    // fetch(window.location.pathname, {
-    //     method: "POST",
-    //     body: data,
-    //     credentials: "same-origin",
-    //     headers: headers
-    // }).then((response) => {
-    //     console.log(response)
-    // })
     upload_file(e).then()
 })
 

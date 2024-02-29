@@ -53,7 +53,9 @@ def _valid_path(path, path_should_exist, root):
         return False, f"Path '{str(path)}' contains invalid path(symlink or didn't exist)"
 
     if settings.DEBUG:
-        assert Path(settings.FILE_MANAGER_ROOT_PATH) in p.parents
+        root = Path(settings.FILE_MANAGER_ROOT_PATH)
+        if root != p and not Path(settings.FILE_MANAGER_ROOT_PATH) in p.parents:
+            return False, f"Path {p} not in root"
     return True, p
 
 
