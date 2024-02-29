@@ -1,5 +1,6 @@
 import bisect
 import os
+import pathlib
 import re
 import shutil
 from functools import wraps
@@ -8,23 +9,23 @@ from pathlib import Path
 from django.conf import settings
 
 
-def _check_parents(p):
+def _parents_valid(p):
+    if not p.parent.exists():
+        return False
     for path in p.parents:
-        if path.is_symlink() or not path.exists():
+        if path.is_symlink():
             return False
     return True
 
 
 def is_valid_filename(name) -> bool:
-    if type(name) is not str:
-        return False
     s = re.fullmatch(r"[-\w. ]+", name)
     if s is None or name in {"", ".", ".."}:
         return False
     return True
 
 
-def _list_files(path):
+def get_files(path):
     res = [list(), list()]
     for i in os.scandir(path):
         stat = i.stat(follow_symlinks=False)
@@ -38,14 +39,32 @@ def _list_files(path):
     return res
 
 
+def _valid_path(path, path_should_exist, root):
+    if type(path) is not str and type(path) is not pathlib.PosixPath:
+        return False, "invalid path type"
+    for j in path.parts:
+        if not is_valid_filename(j):
+            return False, f"Invalid filename: '{j}'"
+    p = root / path
+    if path_should_exist != p.exists() and path_should_exist is not None:
+        return False, f"Path '{str(path)}' existence should be {path_should_exist}"
+
+    if not path_should_exist and not _parents_valid(p):
+        return False, f"Path '{str(path)}' contains invalid path(symlink or didn't exist)"
+
+    if settings.DEBUG:
+        assert Path('/home/vagente/djangoWeb_media') in p.parents
+    return True, p
+
+
 def _resolve_path(should_exist, idxes=(1,)):
     """
     Returns a decorator.
     args[0] should be self which is a Filemanager.
-    should_exit should be iterable of bool, corresponding to idx in idxes, which should be path in args.
+    should_exit should be iterable of bool, corresponding to idx in idxes, which should be the index of path in args.
     args[idx] should be path
-    Will replace path with None if path is not valid(not a sub path of the root path or contain invalid characters)
-    will return False if should_exit != args[idx].exists()
+    Will return False, message if path is invalid(not a sub path of the root path or contain invalid characters)
+    will return False if should_exist != args[idx].exists(), won't check for path existence if should_exist[i] is None
     """
 
     def decorator(func):
@@ -57,19 +76,24 @@ def _resolve_path(should_exist, idxes=(1,)):
             args = list(args)
             for i, idx in enumerate(idxes):
                 partial = Path(str(args[idx]))
-                for j in partial.parts:
-                    if not is_valid_filename(j):
-                        return False, f"Invalid filename: '{j}'"
-                p = self.root / partial
-                if should_exist[i] != p.exists() and should_exist[i] is not None:
-                    return False, f"Path '{str(partial)}' existence should be {should_exist[i]}"
+                path_should_exist = should_exist[i]
+                res, data = _valid_path(partial, path_should_exist, self.root)
+                if not res:
+                    return False, data
 
-                if not should_exist and _check_parents(p):
-                    return f"Path '{str(partial)}' contains invalid path(symlink or didn't exist)"
+                # for j in partial.parts:
+                #     if not is_valid_filename(j):
+                #         return False, f"Invalid filename: '{j}'"
+                # p = self.root / partial
+                # if path_should_exist != p.exists() and path_should_exist is not None:
+                #     return False, f"Path '{str(partial)}' existence should be {should_exist[i]}"
+                #
+                # if not should_exist and _check_parents(p):
+                #     return False, f"Path '{str(partial)}' contains invalid path(symlink or didn't exist)"
 
-                args[idx] = p
-                if settings.DEBUG:
-                    assert Path('/home/vagente/djangoWeb_media') in p.parents
+                args[idx] = data
+                # if settings.DEBUG:
+                #     assert Path('/home/vagente/djangoWeb_media') in p.parents
             try:
                 res = func(*args, **kwargs)
             except PermissionError:
@@ -118,9 +142,13 @@ class FileManager(object):
     def get_path(self, path):
         return path
 
+    def path_exists(self, path):
+        res, data = _valid_path(path, True, self.root)
+        return res
+
     def list_files(self, path):
         if str(path) == '':
-            return True, _list_files(self.root)
+            return True, get_files(self.root)
         else:
             return self._list_files(path)
 
@@ -128,7 +156,7 @@ class FileManager(object):
     def _list_files(self, path: Path):
         if not path.is_dir() or path.is_symlink():
             return False, f"Not a directory: {path.name}"
-        return True, _list_files(path)
+        return True, get_files(path)
 
     @_resolve_path((False,))
     def touch(self, path: Path) -> (bool, str):

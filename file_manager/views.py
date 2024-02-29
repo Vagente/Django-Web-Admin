@@ -1,11 +1,15 @@
+import asyncio
+from pathlib import Path
+
+from django.http import JsonResponse, StreamingHttpResponse, Http404
 from django.shortcuts import render
 from django_otp.decorators import otp_required
-from django.http import JsonResponse
+from django.core.files import File
 
 from file_manager import *
 from .file_manager import FileManager
 from .forms import UploadFileForm
-from pathlib import Path
+from file_manager.file_manager import FileManager
 
 
 def handle_uploaded_file(file, path):
@@ -43,3 +47,24 @@ def file_manager(request):
         # 'all_func': json.dumps(ALL_FUNCTIONS)
     }
     return render(request, 'file_manager/index.html', context)
+
+
+async def streaming_response(path):
+    manager = FileManager()
+    if not manager.path_exists(path):
+        raise Http404
+    file = File(open(path, 'rb'), path)
+    try:
+        async for chunk in file.chunks(1024 * 2):
+            yield chunk
+    except asyncio.CancelledError:
+        # Handle disconnect
+        ...
+        raise
+
+
+async def streaming_view(request):
+    if "Download-File-Path" not in request.headers:
+        raise Http404
+    path = request.headers["Download-File-Path"]
+    return StreamingHttpResponse(streaming_response(path))

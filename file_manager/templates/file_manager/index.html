@@ -169,28 +169,26 @@
         socket.onmessage = function (event) {
             progress('75%')
             let data = event.data
-            try {
-                data = JSON.parse(event.data);
-                let data_type = data[0]
-                let res = data[1]
-                let content = data[2]
-                let simple_funcs = [{{ move_file }}, {{ copy_file }}, {{ delete_file }}, {{ make_dir }}, {{ create_file }}]
-                if (data_type === {{ list_file }}) {
-                    if (res) {
-                        _last_path = _current_path
-                        update_table(content)
-                    } else {
-                        change_path(_last_path)
-                        list_folder(_current_path)
-                        alert(content)
-                    }
-                } else if (simple_funcs.includes(data_type)) {
-                    alert(content)
+            data = JSON.parse(event.data);
+            let data_type = data[0]
+            let res = data[1]
+            let content = data[2]
+            let simple_funcs = [{{ move_file }}, {{ copy_file }}, {{ delete_file }}, {{ make_dir }}, {{ create_file }}]
+            if (data_type === {{ list_file }}) {
+                if (res) {
+                    _last_path = _current_path
+                    console.log(content)
+                    update_table(content)
+                } else {
+                    change_path(_last_path)
                     list_folder(_current_path)
+                    alert(content)
                 }
-            } catch (e) {
-                alert(e)
+            } else if (simple_funcs.includes(data_type)) {
+                alert(content)
+                list_folder(_current_path)
             }
+
             progress('100%')
         }
 

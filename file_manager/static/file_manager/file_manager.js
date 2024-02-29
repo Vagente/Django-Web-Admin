@@ -210,7 +210,6 @@ async function upload_file(e) {
     data.append(csrf_input.name, csrf_input.value)
     const size = file.size
 
-
     let xhr = new XMLHttpRequest();
     xhr.open("POST", window.location.pathname);
     xhr.withCredentials = true;
