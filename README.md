@@ -10,7 +10,7 @@ Current implemented functionality:
   - Only manage files under FILE_MANAGER_ROOT_PATH in settings.py
   - Browse, move, create and delete folder and file
   - Upload file.
-  - File download, current using synchronous method, trying to find async method
+  - File download, current using synchronous open(), which means the file will be fully consumed before serving. trying to find an async solution
 
 - dashboard with basic system info, charts currently not implemented.
 
