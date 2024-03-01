@@ -126,6 +126,7 @@
     {% load static %}
     <script src="{% static 'file_manager/file_manager.js' %}"></script>
     <script>
+        const _download_url = "{% url 'file_manager:download' %}"
         const socket = new WebSocket(
             'wss://localhost/ws/file_manager/'
         )

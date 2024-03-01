@@ -117,6 +117,23 @@ function update_table(input) {
 
             let ul = document.createElement("ul")
             ul.classList.add('dropdown-menu')
+            //download button
+            if (idx === 1) {
+                let li = document.createElement('li')
+                let button = document.createElement('button')
+                button.classList.add('dropdown-item')
+                button.textContent = 'download'
+                button.onclick = () => {
+                    let path = _current_path.join('/')
+                    if (path === '')
+                        path += name
+                    else path += ('/' + name)
+                    window.open(_download_url + '?path=' + path)
+                }
+                li.appendChild(button)
+                ul.appendChild(li)
+            }
+
             const dropdown_names = ['move', 'copy', 'delete']
             for (let j = 0; j < dropdown_names.length; j++) {
                 let li = document.createElement('li')
@@ -130,9 +147,6 @@ function update_table(input) {
                 li.appendChild(button)
                 ul.appendChild(li)
             }
-            ul.addEventListener('contextmenu', (e) => {
-                e.stopPropagation()
-            })
             div.appendChild(ul)
             td.appendChild(div)
             tr.appendChild(td)

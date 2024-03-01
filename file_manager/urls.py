@@ -5,5 +5,5 @@ from django.contrib.auth.decorators import login_required
 app_name = "file_manager"
 urlpatterns = [
     path("", views.file_manager, name="index"),
-    path("download/", views.streaming_view, name="download")
+    path("download/", views.file_download, name="download")
 ]

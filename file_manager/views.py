@@ -1,15 +1,12 @@
-import asyncio
 from pathlib import Path
 
-from django.http import JsonResponse, StreamingHttpResponse, Http404
+from django.http import JsonResponse, FileResponse, Http404
 from django.shortcuts import render
 from django_otp.decorators import otp_required
-from django.core.files import File
 
 from file_manager import *
-from .file_manager import FileManager
-from .forms import UploadFileForm
 from file_manager.file_manager import FileManager
+from .forms import UploadFileForm
 
 
 def handle_uploaded_file(file, path):
@@ -49,22 +46,16 @@ def file_manager(request):
     return render(request, 'file_manager/index.html', context)
 
 
-async def streaming_response(path):
+@otp_required
+def file_download(request):
+    path = request.GET.get('path', '')
+    if path == '':
+        raise Http404
     manager = FileManager()
+    path = Path(path)
     if not manager.path_exists(path):
         raise Http404
-    file = File(open(path, 'rb'), path)
-    try:
-        async for chunk in file.chunks(1024 * 2):
-            yield chunk
-    except asyncio.CancelledError:
-        # Handle disconnect
-        ...
-        raise
-
-
-async def streaming_view(request):
-    if "Download-File-Path" not in request.headers:
-        raise Http404
-    path = request.headers["Download-File-Path"]
-    return StreamingHttpResponse(streaming_response(path))
+    path = manager.get_path(path)
+    if path.is_dir():
+        return JsonResponse({'message': "can't download folder"}, status=400)
+    return FileResponse(open(path, 'rb'), as_attachment=True)
