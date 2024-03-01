@@ -14,7 +14,7 @@ Current implemented functionality:
 - dashboard with basic system info, charts currently not implemented.
 
 ## Compatibility
-The project is tested on ubuntu 22.04 but should ideally work on any posix systems(Not sure)
+The project is tested on ubuntu 22.04 but should ideally work on most Linux distros
 
 Python version 3.11 and above. Should work for lower version of python if you swap 
 "termios.tcsetwinsize" with commented out code "set_winsize". (Maybe I should do a version checking)
