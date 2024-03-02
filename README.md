@@ -11,6 +11,7 @@ Current implemented functionality:
   - Browse, move, create and delete folder and file
   - Upload file.
   - File download, current using synchronous open(), which means the file will be fully consumed before serving. trying to find an async solution
+  - file rename is done via the move function. the behavior should be the same as the linux 'mv'
 
 - dashboard with basic system info, charts currently not implemented.
 
