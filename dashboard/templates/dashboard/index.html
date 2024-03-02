@@ -7,15 +7,15 @@
 {% endblock %}
 
 {% block main %}
-    <main id = "dashboard" class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <main id="dashboard" class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">Dashboard</h1>
-{#            <div class="btn-toolbar mb-2 mb-md-0">#}
-{#                <div class="btn-group me-2">#}
-{#                    <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>#}
-{#                    <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>#}
-{#                </div>#}
-{#            </div>#}
+            {#            <div class="btn-toolbar mb-2 mb-md-0">#}
+            {#                <div class="btn-group me-2">#}
+            {#                    <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>#}
+            {#                    <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>#}
+            {#                </div>#}
+            {#            </div>#}
         </div>
 
         <h3>System</h3>
@@ -39,18 +39,29 @@
                     <td>{{ load_avg }}</td>
                 </tr>
                 <tr>
-                    <td>1,004</td>
-                    <td>text</td>
+                    <td>CPU usage</td>
+                    <td id="cpu_usage">None</td>
                 </tr>
+                <tr>
+                    <td>Memory usage</td>
+                    <td id="memory_usage">None</td>
+                </tr>
+                <tr>
+                    <td>Swap usage</td>
+                    <td id="swap_usage">None</td>
+                </tr>
+                <tr>
+                    <td>Disk usage</td>
+                    <td id="disk_usage">None</td>
+                </tr>
+
                 </tbody>
             </table>
         </div>
 
-
-{#        <div class="col-6" style="background-color: crimson; height: 100px"></div>#}
-{#        <div class="col-6">#}
-{#            <canvas class="my-4" id="myChart"></canvas>#}
-{#        </div>#}
+        {#        <div class="col-4">#}
+        {#            <canvas class="my-4" id="myChart"></canvas>#}
+        {#        </div>#}
 
     </main>
 
@@ -60,6 +71,7 @@
     {{ block.super }}
     {% load static %}
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script>
         const dateTime = luxon.DateTime
         const boot_date = dateTime.fromSeconds({{ boot_time }})
