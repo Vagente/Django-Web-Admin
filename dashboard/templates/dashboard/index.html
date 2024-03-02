@@ -7,15 +7,15 @@
 {% endblock %}
 
 {% block main %}
-    <main class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <main id = "dashboard" class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">Dashboard</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
-                <div class="btn-group me-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-                </div>
-            </div>
+{#            <div class="btn-toolbar mb-2 mb-md-0">#}
+{#                <div class="btn-group me-2">#}
+{#                    <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>#}
+{#                    <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>#}
+{#                </div>#}
+{#            </div>#}
         </div>
 
         <h3>System</h3>
@@ -47,10 +47,10 @@
         </div>
 
 
-        <div class="col-6" style="background-color: crimson; height: 100px"></div>
-        <div class="col-6">
-            <canvas class="my-4" id="myChart"></canvas>
-        </div>
+{#        <div class="col-6" style="background-color: crimson; height: 100px"></div>#}
+{#        <div class="col-6">#}
+{#            <canvas class="my-4" id="myChart"></canvas>#}
+{#        </div>#}
 
     </main>
 
@@ -59,60 +59,11 @@
 {% block js %}
     {{ block.super }}
     {% load static %}
-    <script src="{% static 'dashboard/dashboard.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
     <script>
-        const formats = ['years', 'months', 'days', 'hours', 'minutes']
         const dateTime = luxon.DateTime
         const boot_date = dateTime.fromSeconds({{ boot_time }})
-        const uptime_element = document.getElementById("uptime")
-        const server_time = document.getElementById("server_time")
-        const timezone = document.getElementById("timezone")
-
-        function update_uptime() {
-            const uptime = dateTime.now().diff(boot_date, formats)
-            let text = ""
-            let loop = 0
-            for (const key in uptime.values) {
-                loop += 1
-                let found = false
-                const num = Math.round(uptime[key])
-                if (!(num === 0) || found) {
-                    found = true
-                    const num = Math.round(uptime[key])
-                    text += `${num} ${key}`
-                    if (loop < formats.length) {
-                        text += `, `
-                    }
-                }
-            }
-            uptime_element.innerText = text
-
-        }
-
-        function update_server_time() {
-            const time = dateTime.now().setZone('{{ time_zone }}')
-            server_time.innerText = time.toLocaleString({
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric'
-            })
-        }
-
-        function update_data() {
-            update_server_time()
-            update_uptime()
-        }
-
-        update_server_time()
-        update_uptime()
-        setInterval(update_data, 60 * 1000)
-
-        const _time = dateTime.now().setZone('{{ time_zone }}')
-        timezone.innerText = `UTC${_time.offset / 60}`
-
-
+        const _server_timezone = '{{ time_zone }}'
     </script>
+    <script src="{% static 'dashboard/dashboard.js' %}"></script>
 {% endblock %}
