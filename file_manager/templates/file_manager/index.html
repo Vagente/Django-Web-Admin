@@ -127,8 +127,12 @@
     <script src="{% static 'file_manager/file_manager.js' %}"></script>
     <script>
         const _download_url = "{% url 'file_manager:download' %}"
+
+        let ws_protocol = 'ws://'
+        if (window.location.protocol === 'https:')
+            ws_protocol = 'wss://'
         const socket = new WebSocket(
-            'wss://localhost/ws/file_manager/'
+            ws_protocol + location.host + '/ws/file_manager/'
         )
 
         let _current_path = [];
