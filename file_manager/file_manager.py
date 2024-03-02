@@ -64,9 +64,10 @@ def _resolve_path(should_exist, idxes=(1,)):
     Returns a decorator.
     args[0] should be self which is a Filemanager.
     should_exit should be iterable of bool, corresponding to idx in idxes, which should be the index of path in args.
-    args[idx] should be path
-    Will return False, message if path is invalid(not a sub path of the root path or contain invalid characters)
-    will return False if should_exist != args[idx].exists(), won't check for path existence if should_exist[i] is None
+    args[idx] should be path.
+    Will return (False, message) if path is invalid(not a sub path of the root path or contain invalid characters).
+    will return (False, message) if should_exist != args[idx].exists(), won't check for path existence if
+    should_exist[i] is None.
     """
 
     def decorator(func):
