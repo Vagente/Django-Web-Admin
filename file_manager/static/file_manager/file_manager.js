@@ -179,7 +179,8 @@ modal.addEventListener('show.bs.modal', event => {
         args = []
     }
     if (args != null) {
-        input_field.value = ''
+        // show input field
+        input_field.value = path
         let label = modal.querySelector('label')
         label.textContent = message
         body.removeAttribute('hidden')
@@ -196,6 +197,7 @@ modal.addEventListener('show.bs.modal', event => {
             file_operations(func_name)(args)
         }
     } else {
+        // hide input field
         input_field.value = path
         body.setAttribute('hidden', 'true')
         confirm.onclick = () => {
