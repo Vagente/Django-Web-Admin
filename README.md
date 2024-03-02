@@ -18,8 +18,8 @@ Current implemented functionality:
 ## Compatibility
 The project is tested on ubuntu 22.04 but should ideally work on most Linux distros
 
-Python version 3.11 and above. Should work for lower version of python if you swap 
-"termios.tcsetwinsize" with commented out code "set_winsize". (Maybe I should do a version checking)
+Python version 3.11 and above. Should work with lower version of python if you swap 
+"termios.tcsetwinsize" with commented out code "set_winsize" (in xterm/consumers.py). (Maybe I should do a version checking)
 ## Setup
 - Clone project and install requirements.txt, the project comes with a migrated sqlite database.
 - Install and setup redis-server 
@@ -29,12 +29,12 @@ Python version 3.11 and above. Should work for lower version of python if you sw
 
 - HTTPS
   - Install and setup caddy with Caddyfile in the project root for https and other functionalities.
-  - If you don't want https and just want to test the project, remove the last 4 lines in settings.py 
+  - If you don't want https, remove the last 4 lines in settings.py
 
 ## Coding detail
 Web terminal is implemented with websocket, frontend is xterm.js. Backend is implemented with pty.fork()
 pseudo terminal. User login with "su --loign"
 
-File manager operations are done with websocket. File upload using ajax and http.
+File manager operations are done with websocket. File upload using ajax and http. File download with http.
 
-Modified django-otp to separate login and otp page and add support for websocket.
+Modified django-otp to separate login and otp page and added support for authentication with websocket.
