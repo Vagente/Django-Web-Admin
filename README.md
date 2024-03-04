@@ -31,6 +31,14 @@ Python version 3.11 and above. Should work with lower version of python if you s
   - Install and setup caddy with Caddyfile in the project root for https and other functionalities.
   - If you don't want https, remove the last 4 lines in settings.py
 
+- Login
+  - if you are using the project database, the superuser account is username: admin, password: test_admin
+  - Otp for admin account is "otpauth://totp/admin?secret=IHG2JGXILTOO273VJ2VX5V2HJ4ER5KDG&algorithm=SHA1&digits=6&period=30"
+ or scan the qrcode below using the authenticator app. 
+Make sure the server time and authenticator device time are both accurate for it to work properly.
+  
+  ![Alt text](./imgs/localhost.svg)
+
 ## Coding detail
 Web terminal is implemented with websocket, frontend is xterm.js. Backend is implemented with pty.fork()
 pseudo terminal. User login with "su --loign"
