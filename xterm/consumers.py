@@ -96,7 +96,7 @@ class XtermConsumer(WebsocketConsumer):
         self.t.start()
 
     def connect(self):
-        if not self.scope["user"].is_verified() or not self.scope["user"].is_superuser:
+        if not self.scope["user"].is_verified or not self.scope["user"].is_superuser:
             self.close()
             return
         global xterm_connections
