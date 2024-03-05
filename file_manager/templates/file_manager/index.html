@@ -102,6 +102,14 @@
                     data-bs-function="create_file">New File
             </button>
             <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#upload_modal">Upload file</button>
+            <div style="display: inline; float: right">
+            <span style="color: white">Status:
+                <span id="connect_status">connecting...</span>
+            </span>
+                <button id="connect_button" class="btn btn-success btn-sm" type="button" onclick="connection_button()">
+                    Connect
+                </button>
+            </div>
             <table class="table table-hover">
                 <thead>
                 <tr>
@@ -136,7 +144,8 @@
         )
 
         let _current_path = [];
-        let _last_path = []
+        let _last_path = [];
+        let _redirect_loop = false
 
         function list_folder(path) {
             socket.send(JSON.stringify([{{ list_file }}, [path.join('/')]]))
@@ -161,14 +170,28 @@
 
 
         function change_path(path) {
-            _current_path = path
+            if (_current_path !== path)
+                _current_path = [...path]
+            {#window.location = '#' + _current_path.join('/')#}
+            list_folder(_current_path)
             clear_file_path()
             update_file_path(path)
         }
 
         socket.onopen = function () {
+            connect_status.innerHTML = '<span style="background-color: #2470dc;">Connected</span>'
+            connect_button.textContent = 'Disconnect'
+            connect_button.classList.replace("btn-success", "btn-danger")
+            progress('75%')
             list_folder(_current_path)
-            progress('50%')
+        }
+
+        socket.onclose = function (e) {
+            connect_status.innerHTML = '<span style="background-color: red;">disconnected</span>'
+            connect_button.textContent = 'Connect'
+            connect_button.classList.replace("btn-danger", "btn-success")
+            if (e["code"] === 4000)
+                alert("Root folder error(didn't exist, doesn't have permission or is not a folder)")
         }
 
         socket.onmessage = function (event) {
@@ -181,11 +204,20 @@
             let simple_funcs = [{{ move_file }}, {{ copy_file }}, {{ delete_file }}, {{ make_dir }}, {{ create_file }}]
             if (data_type === {{ list_file }}) {
                 if (res) {
-                    _last_path = _current_path
+                    _redirect_loop = false
+                    if (_last_path !== _current_path) {
+                        _last_path = [..._current_path]
+                    }
                     update_table(content)
                 } else {
+                    if (_redirect_loop) {
+                        _current_path = [];
+                        _last_path = [];
+                        return
+                    }
+                    _redirect_loop = true
                     change_path(_last_path)
-                    list_folder(_current_path)
+                    {#list_folder(_current_path)#}
                     alert(content)
                 }
             } else if (simple_funcs.includes(data_type)) {
@@ -202,7 +234,8 @@
                 table_element.innerText = '';
                 _current_path.push(name)
                 change_path(_current_path)
-                list_folder(_current_path)
+                {#list_folder(_current_path)#}
+                {#window.location = '#' + _current_path.join('/')#}
                 progress('50%')
             }
 
@@ -210,6 +243,6 @@
         }
 
         append_path("Root", [], true)
-
+        progress("50%")
     </script>
 {% endblock %}

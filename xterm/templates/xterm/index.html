@@ -52,7 +52,7 @@
     let username = ""
     let is_initialized = false
     let wait_response = false
-    const prefix = '\x1b[96;49m' + "$$ "
+    const prefix = '\x1b[96;49m' + "$$: "
 
 
     function term_get_username(event) {
@@ -89,9 +89,8 @@
 
     socket.onopen = function () {
         status.innerHTML = '<span style="background-color: #2470dc;">initializing</span>'
-        button.innerHTML = 'Disconnect'
+        button.textContent = 'Disconnect'
         button.classList.replace("btn-success", "btn-danger")
-        console.log("Connection is made")
         terminal.writeln(prefix + "Please login")
         terminal.write(prefix + "username: ")
         wait_response = false
@@ -116,7 +115,7 @@
         terminal.writeln("")
         terminal.write(prefix + "Disconnected from the server")
         status.innerHTML = '<span style="background-color: red;">disconnected</span>'
-        button.innerHTML = 'Connect'
+        button.textContent = 'Connect'
         button.classList.replace("btn-danger", "btn-success")
         if (event["code"] === {{ CONNECTION_LIMIT_CODE }}) {
             alert({{ MAX_CONNECTION }} + " max connection limit reached")
@@ -160,9 +159,9 @@
     }
 
     function connection_button() {
-        if (button.innerHTML === 'Connect') {
+        if (button.textContent === 'Connect') {
             location.reload();
-        } else if (button.innerHTML === "Disconnect") {
+        } else if (button.textContent === "Disconnect") {
             socket.close()
         }
     }

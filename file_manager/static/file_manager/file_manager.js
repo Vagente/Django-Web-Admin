@@ -169,12 +169,13 @@ modal.addEventListener('show.bs.modal', event => {
     const func_name = button.getAttribute('data-bs-function')
     const title = modal.querySelector('.modal-header h1')
     const body = modal.querySelector('.modal-body')
-    title.textContent = func_name + ' file: ' + path
+    title.textContent = func_name + ' in: ' + path
     let args = null
-    let message = 'Name or path(relative to current path)'
+    let message = 'Name'
     if (input_funcs.includes(func_name)) {
         args = [path]
-        message = "Path(relative to root)"
+        title.textContent = func_name + ' file: ' + path
+        message = "Path(Absolute)"
     } else if (single_input.includes(func_name)) {
         args = []
     }
@@ -255,3 +256,21 @@ upload_form.addEventListener('submit', (e) => {
     upload_file(e).then()
 })
 
+
+// window.onhashchange = function () {
+//     console.log("hi")
+//     list_folder(_current_path)
+// }
+
+
+// status
+const connect_status = document.getElementById("connect_status")
+const connect_button = document.getElementById("connect_button")
+
+function connection_button() {
+    if (connect_button.textContent === 'Connect') {
+        location.reload();
+    } else if (connect_button.textContent === "Disconnect") {
+        socket.close()
+    }
+}
