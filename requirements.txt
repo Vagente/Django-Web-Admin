@@ -8,4 +8,8 @@ channels_redis~=4.2.0
 async-timeout~=4.0.3
 
 #optional
+# for displaying qrcode of otp device
 qrcode~=7.4.2
+# for redis cache, if you don't want this, disable redis cache in setting.py
+hiredis~=2.3.2
+redis~=5.0.1
