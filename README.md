@@ -22,11 +22,7 @@ Python version 3.11 and above. Should work with lower version of python if you s
 "termios.tcsetwinsize" with commented out code "set_winsize" (in xterm/consumers.py). (Maybe I should do a version checking)
 ## Setup
 - Clone project and install requirements.txt, the project comes with a migrated sqlite database.
-- Install and setup redis-server 
-  - on ubuntu run: sudo apt install redis-server
-  - then edit /etc/redis/redis.conf. Modify "supervised no" to "supervised systemd"
-  - restart redis service. it should run on port 6379 by default
-
+- Install and setup redis-server
 - HTTPS
   - Install and setup caddy with Caddyfile in the project root for https and other functionalities.
   - If you don't want https, remove the last 4 lines in settings.py
