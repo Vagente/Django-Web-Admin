@@ -88,8 +88,9 @@ function update_table(input) {
             th.appendChild(svg).appendChild(use);
             th.appendChild(text);
             tr.appendChild(th);
-
-            let funcs = [seconds_to_string, (x) => x, formatBytes]
+            const funcs = [seconds_to_string, (x) => x, () => '']
+            if (idx === 1)
+                funcs[2] = formatBytes
             for (let j = 0; j < 3; j++) {
                 let td = document.createElement("td")
                 td.innerText = funcs[j](files[i][j + 1])

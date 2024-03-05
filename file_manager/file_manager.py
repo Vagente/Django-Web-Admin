@@ -31,7 +31,7 @@ def get_files(path):
         stat = i.stat(follow_symlinks=False)
         name = i.name
         if i.is_dir(follow_symlinks=False):
-            bisect.insort(res[0], [name, stat.st_mtime, 'folder', stat.st_size], key=lambda x: x[0])
+            bisect.insort(res[0], [name, stat.st_mtime, 'folder', None], key=lambda x: x[0])
         else:
             t = Path(i.name).suffix
             t = t if t != "" else 'file'
