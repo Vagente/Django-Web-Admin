@@ -66,7 +66,7 @@
                         <form method="post" id="upload_form">
                             {% csrf_token %}
                             <div class="mb-3">
-                                {{ form.file }}
+                                {{ form }}
                             </div>
                             <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">
                                 Submit

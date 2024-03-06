@@ -225,21 +225,21 @@ const upload_form = document.getElementById('upload_form')
 
 async function upload_file(e) {
     let csrf_input = e.target[0]
+    const path = e.target[2]
     let data = new FormData()
     let file = e.target[1].files[0]
-    data.append('file', file)
     data.append(csrf_input.name, csrf_input.value)
-    const size = file.size
-
+    data.append('file', file)
+    data.append(path.name, path.value)
     let xhr = new XMLHttpRequest();
     xhr.open("POST", window.location.pathname);
     xhr.withCredentials = true;
-    xhr.setRequestHeader('Current-Path', _current_path)
     xhr.onreadystatechange = () => {
         if (xhr.readyState !== 4) return;
         if (xhr.status === 201) {
             alert("upload succeeded")
-            list_folder(_current_path)
+            if (_current_path.join('/') === path.value)
+                list_folder(_current_path)
         } else if (xhr.status === 400) {
             const message = JSON.parse(xhr.responseText)
             alert(message["message"])
@@ -254,6 +254,10 @@ async function upload_file(e) {
 
 upload_form.addEventListener('submit', (e) => {
     e.preventDefault();
+    let path = document.getElementById("upload_path")
+    path.value = _current_path.join('/')
+    if (path.value === '')
+        path.value = '.'
     upload_file(e).then()
 })
 

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse, FileResponse, Http404
 from django.shortcuts import render
 from django_otp.decorators import otp_required
@@ -25,15 +26,15 @@ def handle_uploaded_file(file, path):
 
 @otp_required
 def file_manager(request):
-    if request.method == 'POST' and request.FILES != dict():
-        path = request.headers["Current-Path"]
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            # return JsonResponse({'message': "hi"})
-            return handle_uploaded_file(request.FILES['file'], path)
-    # status, files = manager.list_root_files()
+            return handle_uploaded_file(request.FILES['file'], form.cleaned_data['path'])
+        else:
+            return JsonResponse({'message': "Invalid form"}, status=400)
     context = {
-        # 'all_files': json.dumps(files),
         'list_file': LIST_FILE,
         'create_file': CREATE_FILE,
         'delete_file': DELETE_FILE,
@@ -41,13 +42,14 @@ def file_manager(request):
         'move_file': MOVE_FILE,
         'make_dir': MAKE_DIR,
         'form': UploadFileForm()
-        # 'all_func': json.dumps(ALL_FUNCTIONS)
     }
     return render(request, 'file_manager/index.html', context)
 
 
 @otp_required
 def file_download(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
     path = request.GET.get('path', '')
     if path == '':
         raise Http404
