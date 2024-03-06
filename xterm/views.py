@@ -5,7 +5,6 @@ from django_otp.decorators import otp_required
 from .constants import *
 
 
-@login_required()
 @otp_required()
 def index(request):
     if not request.user.is_superuser:
