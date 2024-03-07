@@ -1,4 +1,4 @@
-## This project is not tested as of now and is very likely to contain bugs and exploits. Use it for study or research
+## This project is not tested for the moment(will add tests later) and is very likely to contain bugs and exploits. Use it for study or research
 
 ## Overview
 A webmin like website written with django, django-channels, django-otp, 
