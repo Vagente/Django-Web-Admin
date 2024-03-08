@@ -118,11 +118,12 @@ function update_table(input) {
 
             let ul = document.createElement("ul")
             ul.classList.add('dropdown-menu')
-            //download button
+
+            // if item is a file add download button. else(folder) add get size button
+            let li = document.createElement('li')
+            let button = document.createElement('button')
+            button.classList.add('dropdown-item')
             if (idx === 1) {
-                let li = document.createElement('li')
-                let button = document.createElement('button')
-                button.classList.add('dropdown-item')
                 button.textContent = 'download'
                 button.onclick = () => {
                     let path = _current_path.join('/')
@@ -131,9 +132,15 @@ function update_table(input) {
                     else path += ('/' + name)
                     window.open(_download_url + '?path=' + path)
                 }
-                li.appendChild(button)
-                ul.appendChild(li)
+
+            } else {
+                // button.textContent = 'Get size';
+                // button.onclick = () => {
+                //     file_operations('dir_size')([_current_path.concat([name].join('/'))])
+                // }
             }
+            li.appendChild(button)
+            ul.appendChild(li)
 
             const dropdown_names = ['move', 'copy', 'delete']
             for (let j = 0; j < dropdown_names.length; j++) {
@@ -258,14 +265,8 @@ upload_form.addEventListener('submit', (e) => {
     path.value = _current_path.join('/')
     if (path.value === '')
         path.value = '.'
-    upload_file(e).then()
+    upload_file(e).then(() => {list_folder(_current_path)})
 })
-
-
-// window.onhashchange = function () {
-//     console.log("hi")
-//     list_folder(_current_path)
-// }
 
 
 // status
