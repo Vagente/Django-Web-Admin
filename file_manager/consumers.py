@@ -18,6 +18,8 @@ class FileManagerConsumer(WebsocketConsumer):
     def send_folder_size(self, path):
         last_item = None
         for s in self.manager.get_dir_size():
+            if self.stop_event.is_set():
+                return
             if last_item is not None:
                 self.send(json.dumps([DIR_SIZE, False, s, path]))
             last_item = s
@@ -40,8 +42,13 @@ class FileManagerConsumer(WebsocketConsumer):
             data_args = arr[DATA_ARGS]
             if data_type == DIR_SIZE:
                 self.create_thread(data_args[0])
-            status, res = self.funcs[data_type](*data_args)
-            self.send(json.dumps([data_type, status, res]))
+            elif data_type == CANCEL_DIR_SIZE:
+                self.stop_event.set()
+                self.t.join()
+                self.stop_event.clear()
+            else:
+                status, res = self.funcs[data_type](*data_args)
+                self.send(json.dumps([data_type, status, res]))
 
         except json.decoder.JSONDecodeError or KeyError:
             return
