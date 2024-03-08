@@ -3,6 +3,7 @@ import os
 import pathlib
 import re
 import shutil
+import time
 from functools import wraps
 from pathlib import Path
 
@@ -83,20 +84,7 @@ def _resolve_path(should_exist, idxes=(1,)):
                 res, data = _valid_path(partial, path_should_exist, self.root)
                 if not res:
                     return False, data
-
-                # for j in partial.parts:
-                #     if not is_valid_filename(j):
-                #         return False, f"Invalid filename: '{j}'"
-                # p = self.root / partial
-                # if path_should_exist != p.exists() and path_should_exist is not None:
-                #     return False, f"Path '{str(partial)}' existence should be {should_exist[i]}"
-                #
-                # if not should_exist and _check_parents(p):
-                #     return False, f"Path '{str(partial)}' contains invalid path(symlink or didn't exist)"
-
                 args[idx] = data
-                # if settings.DEBUG:
-                #     assert Path('/home/vagente/djangoWeb_media') in p.parents
             try:
                 res = func(*args, **kwargs)
             except PermissionError:
@@ -133,6 +121,27 @@ def _copy_file(src: Path, dest: Path) -> (bool, str):
         return False, f"dest is not a directory: {dest.name}"
     shutil.copy(src, dest, follow_symlinks=False)
     return True, 'success'
+
+
+def _get_dir_size(path: Path):
+    if not path.is_dir() or path.is_symlink():
+        return False, f"path is not a directory: {path.name}"
+    size = 0
+    idx = 0
+    start = time.time()
+    for p, directory, files in path.walk():
+        for i in directory + files:
+            idx += 1
+            size += (p / i).lstat().st_size
+            if idx < 50:
+                continue
+            idx = 0
+            tmp = time.time()
+            if (tmp - start) > 0.5:
+                start = tmp
+                yield size
+
+    yield size
 
 
 class FileManager(object):
@@ -198,3 +207,7 @@ class FileManager(object):
     def mkdir(self, path: Path) -> (bool, str):
         path.mkdir()
         return True, 'success'
+
+    @_resolve_path((True,))
+    def get_dir_size(self, path):
+        yield from _get_dir_size(path)
