@@ -76,6 +76,27 @@
                 </div>
             </div>
         </div>
+        <div class="modal" id="file_property_modal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5 text-truncate">Property</h1>
+                    </div>
+                    <div class="modal-body">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div>
+                            Folder size: <span id="folder_size"></span>
+                        </div>
+                        <div>
+                            Number of files: <span id="file_count"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div>
             <div id="loading_bar" class="progress" role="progressbar">
@@ -152,16 +173,18 @@
         }
 
         function file_operations(func) {
-            let functions = {
+            let data_types = {
                 'move': {{ move_file }},
                 'copy': {{ copy_file }},
                 'delete': {{ delete_file }},
                 'create_folder': {{ make_dir }},
-                'create_file': {{ create_file }}
+                'create_file': {{ create_file }},
+                'dir_size': {{ dir_size }},
+                'cancel_dir': {{ cancel_dir_size }},
             }
 
             function _func(args) {
-                socket.send(JSON.stringify([functions[func], args]))
+                socket.send(JSON.stringify([data_types[func], args]))
                 progress('50%')
             }
 
@@ -223,8 +246,15 @@
             } else if (simple_funcs.includes(data_type)) {
                 alert(content)
                 list_folder(_current_path)
+            } else if (data_type === {{ dir_size }}) {
+                const size = content[0]
+                const count = content[1]
+                size_span.textContent = 'Total size: ' + formatBytes(size)
+                count_span.textContent = 'Total files: ' + count
+                if (res) {
+                    folder_size_loading.style.display = "none"
+                }
             }
-
             progress('100%')
         }
 
@@ -234,8 +264,6 @@
                 table_element.innerText = '';
                 _current_path.push(name)
                 change_path(_current_path)
-                {#list_folder(_current_path)#}
-                {#window.location = '#' + _current_path.join('/')#}
                 progress('50%')
             }
 

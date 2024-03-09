@@ -42,7 +42,8 @@ def file_manager(request):
         'move_file': MOVE_FILE,
         'make_dir': MAKE_DIR,
         'dir_size': DIR_SIZE,
-        'form': UploadFileForm()
+        'cancel_dir_size': CANCEL_DIR_SIZE,
+        'form': UploadFileForm(),
     }
     return render(request, 'file_manager/index.html', context)
 

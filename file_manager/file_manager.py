@@ -127,21 +127,23 @@ def _get_dir_size(path: Path):
     if not path.is_dir() or path.is_symlink():
         return False, f"path is not a directory: {path.name}"
     size = 0
-    idx = 0
+    last_count = 0
+    current_count = 0
     start = time.time()
-    for p, directory, files in path.walk():
+    for p, directory, files in os.walk(path):
+        p = Path(p)
         for i in directory + files:
-            idx += 1
+            current_count += 1
             size += (p / i).lstat().st_size
-            if idx < 50:
+            if current_count - last_count < 10000:
                 continue
-            idx = 0
+            last_count = current_count
             tmp = time.time()
             if (tmp - start) > 0.5:
                 start = tmp
-                yield size
+                yield [size, current_count]
 
-    yield size
+    yield [size, current_count]
 
 
 class FileManager(object):

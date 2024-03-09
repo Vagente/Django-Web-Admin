@@ -17,21 +17,25 @@ class FileManagerConsumer(WebsocketConsumer):
 
     def send_folder_size(self, path):
         last_item = None
-        for s in self.manager.get_dir_size():
+        for data in self.manager.get_dir_size(path):
             if self.stop_event.is_set():
+                print("send folder size threaded ended by signal")
                 return
             if last_item is not None:
-                self.send(json.dumps([DIR_SIZE, False, s, path]))
-            last_item = s
+                self.send(json.dumps([DIR_SIZE, False, last_item, path]))
+            last_item = data
         self.send(json.dumps([DIR_SIZE, True, last_item, path]))
+        print("send folder size threaded completed")
 
-    def create_thread(self, path):
+    def create_thread(self, arg):
         if self.t is not None and self.t.is_alive():
             self.stop_event.set()
             self.t.join()
+            self.send(json.dumps([CANCEL_DIR_SIZE, True, None]))
             self.stop_event.clear()
-        self.t = threading.Thread(target=self.send_folder_size, args=(path,), daemon=True)
+        self.t = threading.Thread(target=self.send_folder_size, args=arg, daemon=True)
         self.t.start()
+        print("file manager thread started")
 
     def receive(self, text_data=None, bytes_data=None):
         try:
@@ -41,7 +45,7 @@ class FileManagerConsumer(WebsocketConsumer):
             data_type = arr[DATA_TYPE]
             data_args = arr[DATA_ARGS]
             if data_type == DIR_SIZE:
-                self.create_thread(data_args[0])
+                self.create_thread(data_args)
             elif data_type == CANCEL_DIR_SIZE:
                 self.stop_event.set()
                 self.t.join()

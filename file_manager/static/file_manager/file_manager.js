@@ -134,10 +134,10 @@ function update_table(input) {
                 }
 
             } else {
-                // button.textContent = 'Get size';
-                // button.onclick = () => {
-                //     file_operations('dir_size')([_current_path.concat([name].join('/'))])
-                // }
+                button.textContent = 'Property';
+                button.setAttribute("data-bs-toggle", 'modal')
+                button.setAttribute("data-bs-target", '#file_property_modal')
+                button.setAttribute("data-bs-path", _current_path.concat([name]).join('/'))
             }
             li.appendChild(button)
             ul.appendChild(li)
@@ -163,10 +163,11 @@ function update_table(input) {
     }
 }
 
-const modal = document.getElementById("dropdown_modal")
+// initialize general modal
+const dropdown_modal = document.getElementById("dropdown_modal")
 const input_field = document.getElementById('modal_input')
-const confirm = modal.querySelector('.modal-footer button')
-modal.addEventListener('show.bs.modal', event => {
+const confirm = dropdown_modal.querySelector('.modal-footer button')
+dropdown_modal.addEventListener('show.bs.modal', event => {
     const input_funcs = ['move', 'copy']
     const single_input = ["create_folder", "create_file"]
     const button = event.relatedTarget;
@@ -175,8 +176,8 @@ modal.addEventListener('show.bs.modal', event => {
         path = _current_path
     }
     const func_name = button.getAttribute('data-bs-function')
-    const title = modal.querySelector('.modal-header h1')
-    const body = modal.querySelector('.modal-body')
+    const title = dropdown_modal.querySelector('.modal-header h1')
+    const body = dropdown_modal.querySelector('.modal-body')
     title.textContent = func_name + ' in: ' + path
     let args = null
     let message = 'Name'
@@ -190,7 +191,7 @@ modal.addEventListener('show.bs.modal', event => {
     if (args != null) {
         // show input field
         input_field.value = path
-        let label = modal.querySelector('label')
+        let label = dropdown_modal.querySelector('label')
         label.textContent = message
         body.removeAttribute('hidden')
         confirm.onclick = () => {
@@ -216,6 +217,26 @@ modal.addEventListener('show.bs.modal', event => {
     }
 })
 
+
+const file_property_modal = document.getElementById("file_property_modal")
+const size_span = file_property_modal.querySelector("#folder_size")
+const count_span = file_property_modal.querySelector("#file_count")
+const folder_size_loading = file_property_modal.querySelector(".spinner-border")
+
+file_property_modal.addEventListener("shown.bs.modal", event => {
+    folder_size_loading.style.display = "block"
+    const button = event.relatedTarget;
+    const path = button.getAttribute('data-bs-path')
+    const header = file_property_modal.querySelector("h1")
+    header.textContent = 'Property of ' + path
+    file_operations('dir_size')([path])
+})
+
+file_property_modal.addEventListener('hide.bs.modal', event => {
+    file_operations('cancel_dir')(null)
+    progress('100%')
+})
+
 input_field.addEventListener("keyup", function (event) {
     if (event.key === 'Enter') {
         event.preventDefault();
@@ -223,7 +244,7 @@ input_field.addEventListener("keyup", function (event) {
     }
 });
 
-modal.addEventListener('shown.bs.modal', () => {
+dropdown_modal.addEventListener('shown.bs.modal', () => {
     input_field.focus()
     input_field.select()
 })
@@ -265,7 +286,9 @@ upload_form.addEventListener('submit', (e) => {
     path.value = _current_path.join('/')
     if (path.value === '')
         path.value = '.'
-    upload_file(e).then(() => {list_folder(_current_path)})
+    upload_file(e).then(() => {
+        list_folder(_current_path)
+    })
 })
 
 
