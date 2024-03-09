@@ -47,9 +47,10 @@ class FileManagerConsumer(WebsocketConsumer):
             if data_type == DIR_SIZE:
                 self.create_thread(data_args)
             elif data_type == CANCEL_DIR_SIZE:
-                self.stop_event.set()
-                self.t.join()
-                self.stop_event.clear()
+                if self.t.is_alive() and self.t is not None:
+                    self.stop_event.set()
+                    self.t.join()
+                    self.stop_event.clear()
             else:
                 status, res = self.funcs[data_type](*data_args)
                 self.send(json.dumps([data_type, status, res]))

@@ -63,6 +63,7 @@
         {#            <canvas class="my-4" id="myChart"></canvas>#}
         {#        </div>#}
 
+{#        <div id="echart" style="width: 50%; height: 50%"></div>#}
     </main>
 
 {% endblock %}
@@ -71,7 +72,7 @@
     {{ block.super }}
     {% load static %}
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script>
         const dateTime = luxon.DateTime
         const boot_date = dateTime.fromSeconds({{ boot_time }})

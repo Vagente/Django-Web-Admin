@@ -76,33 +76,26 @@ socket.onmessage = function (e) {
     for (let i = 1; i < 4; i++) {
         const used = formatBytes(data[i][1])
         const total = formatBytes(data[i][2])
-        const text = `${used} (${data[i][0]}%) of ${total}`
-        _stats_elements[i].textContent = text
+        _stats_elements[i].textContent = `${used} (${data[i][0]}%) of ${total}`
     }
 }
 
 
-// const ctx = document.getElementById('myChart')
-// const data = {
-//     labels: [
-//         'Red',
-//         'Blue',
-//         'Yellow'
-//     ],
-//     datasets: [{
-//         label: 'My First Dataset',
-//         data: [300, 50, 100],
-//         backgroundColor: [
-//             'rgb(255, 99, 132)',
-//             'rgb(54, 162, 235)',
-//             'rgb(255, 205, 86)'
-//         ],
-//         hoverOffset: 4
-//     }]
-// };
-// const config = {
-//     type: 'pie',
-//     data: data,
+// let myChart = echarts.init(document.getElementById('echart'));
+// let option = {
+//     xAxis: {
+//         type: 'category',
+//         data: ['60', '50', '40', '30', '20', '10', '0']
+//     },
+//     yAxis: {
+//         type: 'value'
+//     },
+//     series: [
+//         {
+//             data: [120, 200, 150],
+//             type: 'line'
+//         }
+//     ]
 // };
 //
-// const my_chart = new Chart(ctx, config)
+// myChart.setOption(option);

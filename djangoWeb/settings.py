@@ -31,6 +31,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login'
 
 FILE_MANAGER_ROOT_PATH = '/home/vagente/djangoWeb_media'
+# FILE_MANAGER_ROOT_PATH = '/'
 # Application definition
 
 INSTALLED_APPS = [
