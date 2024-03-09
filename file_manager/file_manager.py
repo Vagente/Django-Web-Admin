@@ -20,8 +20,8 @@ def _parents_valid(p):
 
 
 def is_valid_filename(name) -> bool:
-    s = re.fullmatch(r"[-\w. ]+", name)
-    if s is None or name in {"", ".."}:
+    # s = re.fullmatch(r"[^/\\]+", name)
+    if name in {"", ".."}:
         return False
     return True
 
