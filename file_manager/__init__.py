@@ -1,3 +1,5 @@
+from file_manager.file_manager import FileManager
+
 DATA_TYPE = 0
 
 LIST_FILE = 0
