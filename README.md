@@ -1,4 +1,4 @@
-## This project is only partial tested and may contain exploits. Use it for study or research
+## This project is only partially tested and may contain exploits. Use it for study or research
 
 ## Overview
 A webmin like website written with django, django-channels, django-otp, 
