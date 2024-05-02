@@ -22,6 +22,7 @@ from .forms import OTPForm
 @login_required()
 def index(request):
     load = os.getloadavg()
+    load = [round(i, 4) for i in load]
     context = {
         "boot_time": psutil.boot_time(),
         "time_zone": settings.TIME_ZONE,

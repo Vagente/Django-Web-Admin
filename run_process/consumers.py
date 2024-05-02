@@ -2,7 +2,6 @@ import fcntl
 import json
 import os
 import pty
-import pwd
 import select
 import signal
 import struct
@@ -12,19 +11,9 @@ import time
 
 from channels.generic.websocket import WebsocketConsumer
 
-from .constants import *
+from . import *
 
 xterm_connections = 0
-
-
-def valid_username(username):
-    if not type(username) is str:
-        return False
-    for p in pwd.getpwall():
-        shell = p[-1].split("/")[-1]
-        if shell != "nologin" and shell != "false" and p[0] == username:
-            return True
-    return False
 
 
 def set_winsize(fd, row, col, xpix=0, ypix=0):
@@ -32,7 +21,7 @@ def set_winsize(fd, row, col, xpix=0, ypix=0):
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 
-class XtermConsumer(WebsocketConsumer):
+class RunProcessConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fd = None
@@ -41,6 +30,7 @@ class XtermConsumer(WebsocketConsumer):
         self.stop_event = threading.Event()
         self.connected = False
         self._child_alive = False
+        self.processes = [('/bin/bash', ['-c', '/bin/journalctl -n 100 -f'])]
 
     def child_process_alive(self):
         """
@@ -70,19 +60,15 @@ class XtermConsumer(WebsocketConsumer):
                 self.send(json.dumps({JSON_TYPE: TYPE_PTY_OUTPUT, JSON_CONTENT: output}))
         print("thread exited")
 
-    def create_child_process(self, username):
-        if not valid_username(username):
-            self.send(json.dumps({JSON_TYPE: TYPE_ERROR, JSON_CONTENT: "Invalid username"}))
-            return False
+    def create_child_process(self, process_idx):
         if self.child_process_alive():
             os.kill(self.child_pid, signal.SIGKILL)
             os.waitpid(self.child_pid, 0)
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
-            term = os.environ["TERM"] if "TERM" in os.environ else "xterm-256color"
-            term_env: dict = {"TERM": term}
-            os.chdir(os.path.expanduser("~" + username))
-            os.execve("/bin/su", ("django_su", "--login", username), term_env)
+            os.execv(self.processes[process_idx][0], ['django_run_process'] + self.processes[process_idx][1])
+            # os.execv('/bin/bash', ['django_run_process', '-c', '/bin/journalctl -n 100 -f'])
+            # os.execv('/bib/journalctl', ['django_run_process', '-f'])
         self._child_alive = True
         print(f"child process {self.child_pid} started")
         return True
@@ -143,7 +129,7 @@ class XtermConsumer(WebsocketConsumer):
             if data_type == TYPE_PTY_INPUT:
                 content = data[JSON_CONTENT]
                 if type(content) is str:
-                    os.write(self.fd, content.encode())
+                    pass
             elif data_type == TYPE_RESIZE:
                 rows = data["rows"]
                 cols = data["cols"]
@@ -155,10 +141,11 @@ class XtermConsumer(WebsocketConsumer):
                         print(f"another error {e}")
 
             elif data_type == TYPE_INIT:
-                username = data[JSON_CONTENT]
-                status = self.create_child_process(username)
+                process_num = data[JSON_CONTENT]
+                status = self.create_child_process(process_num)
                 if status:
                     self.create_thread()
                     self.send(json.dumps({JSON_TYPE: TYPE_INIT}))
-        except KeyError or json.decoder.JSONDecodeError:
-            return
+        except KeyError or json.decoder.JSONDecodeError as e:
+            print("Error in run_process.consumers: ")
+            print(e)

@@ -1,3 +1,11 @@
+html, body {
+    height: 80%
+}
+
+main, .row, .container-fluid {
+    height: 100%
+}
+
 .bi {
     width: 2rem;
     height: 2rem;

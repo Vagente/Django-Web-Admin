@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block main %}
-    <main id="dashboard" class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">Dashboard</h1>
             {#            <div class="btn-toolbar mb-2 mb-md-0">#}
@@ -58,12 +58,6 @@
                 </tbody>
             </table>
         </div>
-
-        {#        <div class="col-4">#}
-        {#            <canvas class="my-4" id="myChart"></canvas>#}
-        {#        </div>#}
-
-{#        <div id="echart" style="width: 50%; height: 50%"></div>#}
     </main>
 
 {% endblock %}
@@ -72,7 +66,6 @@
     {{ block.super }}
     {% load static %}
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script>
         const dateTime = luxon.DateTime
         const boot_date = dateTime.fromSeconds({{ boot_time }})

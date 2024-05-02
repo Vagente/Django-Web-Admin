@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block main %}
-    <main class="row col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <main class="ol-md-9 ms-sm-auto col-lg-10 px-md-4">
 
         <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
             <symbol id="folder-fill" viewBox="0 0 16 16" style="color: #ffd45e">
@@ -88,10 +88,10 @@
                             <span class="visually-hidden">Loading...</span>
                         </div>
                         <div>
-                            Folder size: <span id="folder_size"></span>
+                            <span id="folder_size"></span>
                         </div>
                         <div>
-                            Number of files: <span id="file_count"></span>
+                            <span id="file_count"></span>
                         </div>
                     </div>
                 </div>
@@ -116,34 +116,43 @@
                     </ol>
                 </div>
             </header>
-            <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal" data-bs-path="."
-                    data-bs-function="create_folder">New Folder
-            </button>
-            <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal" data-bs-path="."
-                    data-bs-function="create_file">New File
-            </button>
-            <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#upload_modal">Upload file</button>
-            <div style="display: inline; float: right">
-            <span style="color: white">Status:
-                <span id="connect_status">connecting...</span>
-            </span>
-                <button id="connect_button" class="btn btn-success btn-sm" type="button" onclick="connection_button()">
-                    Connect
+            <div>
+                <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal"
+                        data-bs-path="."
+                        data-bs-function="create_folder">New Folder
                 </button>
+                <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal"
+                        data-bs-path="."
+                        data-bs-function="create_file">New File
+                </button>
+                <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#upload_modal">Upload file
+                </button>
+                <div style="margin-top: 10px">
+                    <span style="color: white">Status:
+                        <span id="connect_status">connecting...</span>
+                    </span>
+                    <button id="connect_button" class="btn btn-success btn-sm" type="button"
+                            onclick="connection_button()">
+                        Connect
+                    </button>
+                </div>
             </div>
-            <table class="table table-hover">
-                <thead>
-                <tr>
-                    <th class='col-6' scope="col">Name</th>
-                    <th class='col-2' scope="col">Last modified</th>
-                    <th scope="col">type</th>
-                    <th scope="col">size</th>
-                    <th class='col-1' scope="col"></th>
-                </tr>
-                </thead>
-                <tbody id="table_body">
-                </tbody>
-            </table>
+
+            <div class="table-responsive col">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th class='col-6' scope="col">Name</th>
+                        <th class='col-3' scope="col">Last modified</th>
+                        <th scope="col">type</th>
+                        <th scope="col">size</th>
+                        <th class='col-1' scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="table_body">
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
 
@@ -160,6 +169,7 @@
         let ws_protocol = 'ws://'
         if (window.location.protocol === 'https:')
             ws_protocol = 'wss://'
+
         const socket = new WebSocket(
             ws_protocol + location.host + '/ws/file_manager/'
         )

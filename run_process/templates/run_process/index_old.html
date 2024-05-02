@@ -41,79 +41,33 @@
     if (window.location.protocol === 'https:')
         ws_protocol = 'wss://'
     const socket = new WebSocket(
-        ws_protocol + location.host + '/ws/xterm/'
+        ws_protocol + location.host + '/ws/run_process'
     )
-    console.log()
+
     const status = document.getElementById("status")
     const button = document.getElementById("button")
 
     terminal.open(document.getElementById('terminal'));
 
-    let username = ""
-    let is_initialized = false
-    // Do not send key presses if not heard from server during initialization
-    // I use it when I don't want client to send key presses
-    let wait_response = false
-    const prefix = '\x1b[96;49m' + "$$: "
-
-
-    function term_get_username(event) {
-        const key = event.domEvent.key
-        if (key.length === 1) {
-            username += key
-            terminal.write(key)
-        } else if ((key === "Backspace" || key === "Delete") && username.length > 0) {
-            terminal.write("\x08\x1b[K")
-            username = username.slice(0, -1)
-        } else if (key === "Enter") {
-            wait_response = true
-            terminal.writeln("")
-            if (/^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$/.test(username)) {
-                socket.send(JSON.stringify({
-                    {{ JSON_TYPE }}: {{ TYPE_INIT }},
-                    {{ JSON_CONTENT }}: username
-                }));
-            } else {
-                terminal.writeln(prefix + `Invalid username: ${username}`)
-                username = ""
-                terminal.write(prefix + "Username: ")
-                wait_response = false
-            }
-        }
-    }
-
     function initialize() {
         resize()
         window.onresize = resize
         window.onload = resize
-        status.innerHTML = `<span style="background-color: green;">connected as user ${username}</span>`
+        status.innerHTML = `<span style="background-color: green;">connected</span>`
     }
 
     socket.onopen = function () {
         status.innerHTML = '<span style="background-color: #2470dc;">initializing</span>'
         button.textContent = 'Disconnect'
         button.classList.replace("btn-success", "btn-danger")
-        terminal.writeln(prefix + "Please login")
-        terminal.write(prefix + "username: ")
-        wait_response = false
-        terminal.onKey(event => {
-            if (wait_response) {
-                return
-            }
-            if (!is_initialized) {
-                term_get_username(event)
-            } else {
-                socket.send(JSON.stringify({
-                    {{ JSON_TYPE }}: {{ TYPE_PTY_INPUT }},
-                    {{ JSON_CONTENT }}: event["key"]
-                }));
-            }
-        });
         terminal.focus()
+        socket.send(JSON.stringify({
+            {{ JSON_TYPE }}: {{ TYPE_INIT }},
+            {{ JSON_CONTENT }}: {{ JOURNALCTL }}
+        }));
     }
 
     socket.onclose = function (event) {
-        wait_response = true
         terminal.writeln("")
         terminal.write(prefix + "Disconnected from the server")
         status.innerHTML = '<span style="background-color: red;">disconnected</span>'
@@ -125,7 +79,8 @@
     }
 
     socket.onerror = function (event) {
-        console.log("error")
+        alert('Error, check console for detail')
+        console.log("socket error")
         console.log(event)
     }
 
@@ -134,29 +89,18 @@
         try {
             data = JSON.parse(event.data);
         } catch (e) {
-            alert(event.data)
+            alert('server response error, check console')
+            console.log(event)
             return
         }
         if (data[{{ JSON_TYPE }}] === {{ TYPE_PTY_OUTPUT }}) {
             terminal.write(data[{{ JSON_CONTENT }}])
         } else if (data[{{ JSON_TYPE }}] === {{ TYPE_INIT }}) {
-            is_initialized = true
-            wait_response = false
             initialize()
         } else if (data[{{ JSON_TYPE }}] === {{ TYPE_EXITED }}) {
-            is_initialized = false
-            status.innerHTML = `<span style="background-color: green;">Terminal exited</span>`
-            username = ""
-            terminal.writeln("")
-            terminal.writeln(prefix + "Exited")
-            terminal.write(prefix + "username: ")
+            status.innerHTML = `<span style="background-color: green;">Process exited</span>`
         } else if (data[{{ JSON_TYPE }}] === {{ TYPE_ERROR }}) {
-            if (data[{{ JSON_CONTENT }}] === "Invalid username") {
-                terminal.writeln(prefix + `User doesn't exist: ${username}`)
-                username = ""
-                terminal.write(prefix + "username: ")
-                wait_response = false
-            }
+            console.log(data[{{ JSON_CONTENT }}])
         }
     }
 

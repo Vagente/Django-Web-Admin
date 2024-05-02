@@ -1,0 +1,125 @@
+{% extends 'dashboard/sidebar_base.html' %}
+
+{% block css %}
+    {{ block.super }}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'run_process/run_process.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+{% endblock %}
+{% block main %}
+    <main class="col">
+        <div style="background: #0d0d0d; padding-bottom: 5px;">
+    <span style="color: white">Status:
+        <span id="status">connecting...</span>
+    </span>
+            <button id="button" class="btn btn-success btn-sm" type="button" onclick="connection_button()">Connect
+            </button>
+        </div>
+        <div style=" width: 100%; height:100%;" id="terminal"></div>
+    </main>
+
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    {% load static %}
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script>
+        const terminal = new Terminal({
+            theme: {
+                background: '#171717',
+            },
+        });
+        const fitAddon = new FitAddon.FitAddon();
+        terminal.loadAddon(fitAddon);
+
+
+        let ws_protocol = 'ws://'
+        if (window.location.protocol === 'https:')
+            ws_protocol = 'wss://'
+        const socket = new WebSocket(
+            ws_protocol + location.host + '/ws/run_process/'
+        )
+
+        const status = document.getElementById("status")
+        const button = document.getElementById("button")
+
+        terminal.open(document.getElementById('terminal'));
+
+        let is_initialized = false
+
+        function initialize() {
+            resize()
+            window.onresize = resize
+            window.onload = resize
+            status.innerHTML = `<span style="background-color: green;">connected</span>`
+        }
+
+        function resize() {
+            fitAddon.fit()
+            socket.send(JSON.stringify({
+                {{ JSON_TYPE }}: {{ TYPE_RESIZE }},
+                "cols": terminal.cols,
+                "rows": terminal.rows
+            }));
+        }
+
+        socket.onopen = function () {
+            status.innerHTML = '<span style="background-color: #2470dc;">initializing</span>'
+            button.textContent = 'Disconnect'
+            button.classList.replace("btn-success", "btn-danger")
+            terminal.focus()
+            socket.send(JSON.stringify({
+                {{ JSON_TYPE }}: {{ TYPE_INIT }},
+                {{ JSON_CONTENT }}: {{ JOURNALCTL }}
+            }));
+        }
+
+        socket.onclose = function (event) {
+            terminal.writeln("")
+            terminal.write("Disconnected from the server")
+            status.innerHTML = '<span style="background-color: red;">disconnected</span>'
+            button.textContent = 'Connect'
+            button.classList.replace("btn-danger", "btn-success")
+            if (event["code"] === {{ CONNECTION_LIMIT_CODE }}) {
+                alert({{ MAX_CONNECTION }} + " max connection limit reached")
+            }
+        }
+
+        socket.onerror = function (event) {
+            alert('Error, check console for detail')
+            console.log("socket error")
+            console.log(event)
+        }
+
+        socket.onmessage = function (event) {
+            let data;
+            try {
+                data = JSON.parse(event.data);
+            } catch (e) {
+                alert('server response error, check console')
+                console.log(event)
+                return
+            }
+            if (data[{{ JSON_TYPE }}] === {{ TYPE_PTY_OUTPUT }}) {
+                terminal.write(data[{{ JSON_CONTENT }}])
+            } else if (data[{{ JSON_TYPE }}] === {{ TYPE_INIT }}) {
+                is_initialized = true
+                initialize()
+            } else if (data[{{ JSON_TYPE }}] === {{ TYPE_EXITED }}) {
+                status.innerHTML = `<span style="background-color: red;">Process exited</span>`
+            } else if (data[{{ JSON_TYPE }}] === {{ TYPE_ERROR }}) {
+                console.log(data[{{ JSON_CONTENT }}])
+            }
+        }
+
+        function connection_button() {
+            if (button.textContent === 'Connect') {
+                location.reload();
+            } else if (button.textContent === "Disconnect") {
+                socket.close()
+            }
+        }
+    </script>
+{% endblock %}

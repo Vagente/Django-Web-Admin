@@ -1,4 +1,4 @@
-# requires caddy for https and redis-server for channel-redis
+# requires caddy or other reverse proxy for https and redis-server for channel-redis
 
 django~=5.0.2
 channels[daphne]~=4.0.0
@@ -11,5 +11,5 @@ async-timeout~=4.0.3
 # for displaying qrcode of otp device
 qrcode~=7.4.2
 # for redis cache, if you don't want this, disable redis cache in setting.py
-hiredis~=2.3.2
+# hiredis~=2.3.2
 redis~=5.0.1

@@ -27,5 +27,6 @@ urlpatterns = [
     path('admin/', admin.site.urls, name="admin"),
     path('terminal/', include('xterm.urls')),
     path('filemanager/', include('file_manager.urls')),
+    path('run_process/', include('run_process.urls')),
     path('', include('dashboard.urls'))
 ]

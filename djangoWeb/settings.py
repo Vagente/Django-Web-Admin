@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'dashboard.apps.DashboardConfig',
     'xterm.apps.XtermConfig',
     'file_manager.apps.FileManagerConfig',
+    'run_process.apps.RunProcessConfig',
+    
     'daphne.apps.DaphneConfig',
     'django.contrib.admin',
     'django.contrib.auth',
