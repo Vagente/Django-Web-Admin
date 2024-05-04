@@ -68,7 +68,7 @@ class RunProcessConsumer(WebsocketConsumer):
         if self.child_pid == 0:
             os.execv(self.processes[process_idx][0], ['django_run_process'] + self.processes[process_idx][1])
             # os.execv('/bin/bash', ['django_run_process', '-c', '/bin/journalctl -n 100 -f'])
-            # os.execv('/bib/journalctl', ['django_run_process', '-f'])
+            # os.execv('/bin/journalctl', ['django_run_process', '-f'])
         self._child_alive = True
         print(f"child process {self.child_pid} started")
         return True
@@ -82,7 +82,7 @@ class RunProcessConsumer(WebsocketConsumer):
         self.t.start()
 
     def connect(self):
-        if not self.scope["user"].is_verified or not self.scope["user"].is_superuser:
+        if not self.scope["user"].is_verified or not self.scope["user"].is_staff:
             self.close()
             return
         global xterm_connections

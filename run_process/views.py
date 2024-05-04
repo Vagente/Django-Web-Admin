@@ -1,11 +1,12 @@
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from django_otp.decorators import otp_required
+from djangoWeb.decorators import staff_required
 from . import *
 
 
-@login_required()
+@staff_required()
+@otp_required()
 def index(request):
     if not request.user.is_superuser:
         raise PermissionDenied
