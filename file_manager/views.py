@@ -18,9 +18,12 @@ def handle_uploaded_file(file, path):
     if not res:
         return JsonResponse({'message': message}, status=400)
     path = manager.get_path(path)
-    with open(path, 'wb') as dest:
-        for chunk in file.chunks():
-            dest.write(chunk)
+    try:
+        with open(path, 'wb') as dest:
+            for chunk in file.chunks():
+                dest.write(chunk)
+    except Exception as e:
+        return JsonResponse({'message': "Error during write"}, status=400)
     return JsonResponse({'message': message}, status=201)
 
 

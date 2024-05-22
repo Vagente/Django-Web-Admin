@@ -190,19 +190,18 @@ dropdown_modal.addEventListener('show.bs.modal', event => {
     }
     if (args != null) {
         // show input field
-        input_field.value = path
         let label = dropdown_modal.querySelector('label')
         label.textContent = message
         body.removeAttribute('hidden')
         confirm.onclick = () => {
             progress('25%')
             let tmp = ''
-            if (args === []) {
+            if (args.length === 0) {
                 tmp = _current_path.join('/')
                 if (tmp !== '') {
                     tmp += '/'
                 }
-            }
+            } else input_field.value = path
             args.push(tmp + input_field.value)
             file_operations(func_name)(args)
         }

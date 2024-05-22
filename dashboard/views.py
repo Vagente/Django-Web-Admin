@@ -73,5 +73,5 @@ class MyLoginView(auth_views.LoginView):
         """Security check complete. Log the user in."""
         auth_login(self.request, form.get_user())
         if not form.cleaned_data["remember_me"]:
-            self.request.session.set_expiry(0)
+            self.request.session.set_expiry(5)
         return HttpResponseRedirect(self.get_success_url())

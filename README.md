@@ -24,11 +24,9 @@ Python version 3.11 and above. Should work with lower version of python if you s
 - Clone project and install requirements.txt, the project comes with a migrated sqlite database.
 - Install and setup redis-server
 - HTTPS
-  - Install and setup caddy with Caddyfile in the project root for https and other functionalities.
+  - Install and setup caddy with Caddyfile in the project root for https and other functionalities. (Or use your own reverse proxy)
   - If you don't want https, remove the last 4 lines in settings.py
-- Change the database setting, if you are using sqlite, recreate or use another sqlite file. Then migrate the database in django 
-  
-  ![Alt text](./imgs/localhost.svg)
+- Change the database setting, if you are using sqlite, recreate or use another sqlite file. Then migrate the database in django
 
 ## Coding detail
 Web terminal is implemented with websocket, frontend is xterm.js. Backend is implemented with pty.fork()
