@@ -24,10 +24,10 @@ SECRET_KEY = 'django-insecure-nbt&1-45&5uaxcyrt3e8nf+8s(ilpq4rd%r-a8hhvm2=t($aw3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-BASE_ROOT_URL = 'django/'
-# BASE_ROOT_URL = ''
+# BASE_ROOT_URL = 'django/'
+BASE_ROOT_URL = ''
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.39']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 LOGIN_URL = '/' + BASE_ROOT_URL + 'login'
 OTP_LOGIN_URL = '/' + BASE_ROOT_URL + 'login/otp'
 LOGIN_REDIRECT_URL = '/' + BASE_ROOT_URL + ''
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_otp',
+    'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
 
 ]

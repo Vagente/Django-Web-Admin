@@ -21,12 +21,17 @@ The project is tested on ubuntu 22.04 but should ideally work on most Linux dist
 Python version 3.11 and above. Should work with lower version of python if you swap 
 "termios.tcsetwinsize" with commented out code "set_winsize" (in xterm/consumers.py). (Maybe I should do a version checking)
 ## Setup
-- Clone project and install requirements.txt, the project comes with a migrated sqlite database.
-- Install and setup redis-server
-- HTTPS
+- Clone project and setup env.
+- Install and setup redis-server(disable redis in settings.py if you don't want this)
+- HTTPS(If you don't want https, remove the last 4 lines in settings.py)
   - Install and setup caddy with Caddyfile in the project root for https and other functionalities. (Or use your own reverse proxy)
-  - If you don't want https, remove the last 4 lines in settings.py
-- Change the database setting, if you are using sqlite, recreate or use another sqlite file. Then migrate the database in django
+- Run the following in project root.
+  ```shell
+  python manage.py migrate
+  python manage.py createsuperuser 
+  # Add a backup code to "username" to login with otp
+  python manage.py addstatictoken username
+  ```
 
 ## Coding detail
 Web terminal is implemented with websocket, frontend is xterm.js. Backend is implemented with pty.fork()
