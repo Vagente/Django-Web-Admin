@@ -3,6 +3,7 @@ import threading
 import time
 
 import psutil
+from channels.exceptions import StopConsumer
 from channels.generic.websocket import WebsocketConsumer
 
 
@@ -40,6 +41,7 @@ class StatsConsumer(WebsocketConsumer):
     def connect(self):
         if not self.scope['user'].is_authenticated:
             self.close()
+            raise StopConsumer
         self.accept()
         self.create_thread()
 
@@ -47,6 +49,7 @@ class StatsConsumer(WebsocketConsumer):
         if self.t is not None and self.t.is_alive():
             self.stop_event.set()
             self.t.join()
+        raise StopConsumer
 
     def receive(self, text_data=None, bytes_data=None):
         pass

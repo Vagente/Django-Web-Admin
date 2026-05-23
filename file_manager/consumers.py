@@ -5,6 +5,7 @@ from channels.generic.websocket import WebsocketConsumer
 
 from file_manager import *
 from file_manager.file_manager import FileManager
+from channels.exceptions import StopConsumer
 from django.conf import settings
 
 
@@ -62,12 +63,13 @@ class FileManagerConsumer(WebsocketConsumer):
     def connect(self):
         if not self.scope["user"].is_verified or not self.scope["user"].is_superuser:
             self.close()
-            return
+            raise StopConsumer
         try:
             self.manager = FileManager()
         except ValueError:
             self.accept()
             self.close(code=4000)
+            raise StopConsumer
         self.funcs = {
             LIST_FILE: self.manager.list_files,
             CREATE_FILE: self.manager.touch,
@@ -83,3 +85,4 @@ class FileManagerConsumer(WebsocketConsumer):
             self.stop_event.set()
             self.t.join()
             self.stop_event.clear()
+        raise StopConsumer

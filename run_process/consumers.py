@@ -9,6 +9,7 @@ import termios
 import threading
 import time
 
+from channels.exceptions import StopConsumer
 from channels.generic.websocket import WebsocketConsumer
 
 from . import *
@@ -92,17 +93,18 @@ class RunProcessConsumer(WebsocketConsumer):
     def connect(self):
         if not self.scope["user"].is_verified or not self.scope["user"].is_staff:
             self.close()
-            return
+            raise StopConsumer
         global runp_connections
         global runp_lock
         with runp_lock:
             if runp_connections > XTERM_MAX_CONNECTION:
                 self.close()
-                raise Exception
+                print(f"runprocess_connection {runp_connections} exceeds max connection")
+                raise StopConsumer
             elif runp_connections == XTERM_MAX_CONNECTION:
                 self.accept()
                 self.close(code=XTERM_CONNECTION_LIMIT_CODE)
-                return
+                raise StopConsumer
             runp_connections += 1
         self.connected = True
         self.accept()
@@ -122,8 +124,10 @@ class RunProcessConsumer(WebsocketConsumer):
             with runp_lock:
                 runp_connections -= 1
                 if runp_connections < 0:
-                    raise Exception
+                    print(f"runprocess_connection {runp_connections} is less than 0")
+                    raise StopConsumer
             print('disconnected')
+        raise StopConsumer
 
     def receive(self, text_data=None, bytes_data=None):
         try:

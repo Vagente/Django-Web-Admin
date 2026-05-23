@@ -9,6 +9,8 @@ import struct
 import termios
 import threading
 import time
+
+from channels.exceptions import StopConsumer
 from django.conf import settings
 from time import sleep
 
@@ -112,17 +114,18 @@ class XtermConsumer(WebsocketConsumer):
     def connect(self):
         if not self.scope["user"].is_verified or not self.scope["user"].is_superuser:
             self.close()
-            return
+            raise StopConsumer
         global xterm_connections
         global xterm_lock
         with xterm_lock:
             if xterm_connections > XTERM_MAX_CONNECTION:
                 self.close()
-                raise Exception
+                print(f"xterm connections {xterm_connections} exceeds max connection")
+                raise StopConsumer
             elif xterm_connections == XTERM_MAX_CONNECTION:
                 self.accept()
                 self.close(code=XTERM_CONNECTION_LIMIT_CODE)
-                return
+                raise StopConsumer
             xterm_connections += 1
         self.connected = True
         self.accept()
@@ -146,8 +149,10 @@ class XtermConsumer(WebsocketConsumer):
             with xterm_lock:
                 xterm_connections -= 1
                 if xterm_connections < 0:
-                    raise Exception
+                    print(f"xterm connections {xterm_connections} exceeds max connection")
+                    raise StopConsumer
             print('disconnected')
+        raise StopConsumer
 
     def receive(self, text_data=None, bytes_data=None):
         try:
@@ -178,6 +183,6 @@ class XtermConsumer(WebsocketConsumer):
                 if status:
                     self.create_thread()
                     self.send(json.dumps({JSON_TYPE: TYPE_INIT}))
-        except KeyError or json.decoder.JSONDecodeError:
+        except KeyError or json.decoder.JSONDecodeError as e:
             print("Error in run_process.consumers: ")
             print(e)
