@@ -6,7 +6,6 @@ from channels.generic.websocket import WebsocketConsumer
 from file_manager import *
 from file_manager.file_manager import FileManager
 from channels.exceptions import StopConsumer
-from django.conf import settings
 
 
 class FileManagerConsumer(WebsocketConsumer):

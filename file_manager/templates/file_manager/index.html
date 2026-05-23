@@ -231,6 +231,7 @@
         }
 
         socket.onclose = function (e) {
+            progress('0%')
             connect_status.innerHTML = '<span style="background-color: red;">disconnected</span>'
             connect_button.textContent = 'Connect'
             connect_button.classList.replace("btn-danger", "btn-success")
