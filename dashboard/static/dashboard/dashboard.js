@@ -47,11 +47,23 @@ setInterval(update_data, 60 * 1000)
 const _time = dateTime.now().setZone(_server_timezone)
 timezone.innerText = `UTC${_time.offset / 60}`
 
+function keepFirstPath(url) {
+    const parsed = new URL(url);
+    // If already root, do nothing (preserve original trailing slash or absence)
+    if (parsed.pathname === '/' || parsed.pathname === '') {
+    return parsed.host;
+    }
+    // Extract first non‑empty segment
+    const first = parsed.pathname.split('/').filter(Boolean)[0];
+    // Rebuild with origin + '/' + first segment (query & hash stripped)
+    return parsed.host + '/' + first;
+   }
+
 let ws_protocol = 'ws://'
 if (window.location.protocol === 'https:')
     ws_protocol = 'wss://'
 const socket = new WebSocket(
-    ws_protocol + location.host + '/ws/stats/'
+    ws_protocol + keepFirstPath(location.href) + '/ws/stats/'
 )
 
 
@@ -79,23 +91,3 @@ socket.onmessage = function (e) {
         _stats_elements[i].textContent = `${used} (${data[i][0]}%) of ${total}`
     }
 }
-
-
-// let myChart = echarts.init(document.getElementById('echart'));
-// let option = {
-//     xAxis: {
-//         type: 'category',
-//         data: ['60', '50', '40', '30', '20', '10', '0']
-//     },
-//     yAxis: {
-//         type: 'value'
-//     },
-//     series: [
-//         {
-//             data: [120, 200, 150],
-//             type: 'line'
-//         }
-//     ]
-// };
-//
-// myChart.setOption(option);

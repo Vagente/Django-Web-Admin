@@ -5,6 +5,7 @@ from channels.generic.websocket import WebsocketConsumer
 
 from file_manager import *
 from file_manager.file_manager import FileManager
+from django.conf import settings
 
 
 class FileManagerConsumer(WebsocketConsumer):
@@ -19,7 +20,7 @@ class FileManagerConsumer(WebsocketConsumer):
         last_item = None
         for data in self.manager.get_dir_size(path):
             if self.stop_event.is_set():
-                print("send folder size threaded ended by signal")
+                print("send folder size thread ended by signal")
                 return
             if last_item is not None:
                 self.send(json.dumps([DIR_SIZE, False, last_item, path]))
@@ -78,4 +79,7 @@ class FileManagerConsumer(WebsocketConsumer):
         self.accept()
 
     def disconnect(self, close_code):
-        pass
+        if self.t is not None and self.t.is_alive():
+            self.stop_event.set()
+            self.t.join()
+            self.stop_event.clear()

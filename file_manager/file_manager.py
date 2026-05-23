@@ -99,12 +99,12 @@ def _resolve_path(should_exist, idxes=(1,)):
     return decorator
 
 
-def _copy_dir(src_path: Path, dest_path: Path) -> (bool, str):
+def _copy_dir(src_path: Path, dest_path: Path) -> tuple[bool, str]:
     shutil.copytree(src_path, dest_path, symlinks=True)
     return True, 'success'
 
 
-def _delete_folder(path: Path) -> (bool, str):
+def _delete_folder(path: Path) -> tuple[bool, str]:
     if not shutil.rmtree.avoids_symlink_attacks:
         return False, f"Platform is vulnerable to symlink attacks"
     shutil.rmtree(path, True)
@@ -116,7 +116,7 @@ def _delete_file(path: Path):
     return True, 'success'
 
 
-def _copy_file(src: Path, dest: Path) -> (bool, str):
+def _copy_file(src: Path, dest: Path) -> tuple[bool, str]:
     if not dest.is_dir() or dest.is_symlink():
         return False, f"dest is not a directory: {dest.name}"
     shutil.copy(src, dest, follow_symlinks=False)
@@ -173,7 +173,7 @@ class FileManager(object):
         return True, get_files(path)
 
     @_resolve_path((False,))
-    def touch(self, path: Path) -> (bool, str):
+    def touch(self, path: Path) -> tuple[bool, str]:
         try:
             path.touch(exist_ok=False)
         except FileExistsError:
@@ -197,7 +197,7 @@ class FileManager(object):
             return _delete_file(path)
 
     @_resolve_path((True, None), (1, 2))
-    def move(self, old_path: Path, new_path: Path) -> (bool, str):
+    def move(self, old_path: Path, new_path: Path) -> tuple[bool, str]:
         if new_path.exists() and new_path.is_symlink():
             return False, f"new_path is a symlink"
         if new_path.exists() and not new_path.is_dir():
@@ -206,7 +206,7 @@ class FileManager(object):
         return True, 'success'
 
     @_resolve_path((False,))
-    def mkdir(self, path: Path) -> (bool, str):
+    def mkdir(self, path: Path) -> tuple[bool, str]:
         path.mkdir()
         return True, 'success'
 

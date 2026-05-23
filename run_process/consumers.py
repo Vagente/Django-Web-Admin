@@ -13,7 +13,8 @@ from channels.generic.websocket import WebsocketConsumer
 
 from . import *
 
-xterm_connections = 0
+runp_connections = 0
+runp_lock = threading.Lock()
 
 
 def set_winsize(fd, row, col, xpix=0, ypix=0):
@@ -66,7 +67,14 @@ class RunProcessConsumer(WebsocketConsumer):
             os.waitpid(self.child_pid, 0)
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
-            os.execv(self.processes[process_idx][0], ['django_run_process'] + self.processes[process_idx][1])
+            try:
+                os.execv(self.processes[process_idx][0], ['django_run_process'] + self.processes[process_idx][1])
+            except IndexError as e:
+                return False
+            except Exception as e:
+                print(f"Error in create child process in run_process: {e}")
+                self.send(json.dumps({JSON_TYPE: TYPE_ERROR, JSON_CONTENT: "Failed to create process"}))
+                return False
             # os.execv('/bin/bash', ['django_run_process', '-c', '/bin/journalctl -n 100 -f'])
             # os.execv('/bin/journalctl', ['django_run_process', '-f'])
         self._child_alive = True
@@ -85,17 +93,17 @@ class RunProcessConsumer(WebsocketConsumer):
         if not self.scope["user"].is_verified or not self.scope["user"].is_staff:
             self.close()
             return
-        global xterm_connections
-        lock = threading.Lock()
-        with lock:
-            if xterm_connections > XTERM_MAX_CONNECTION:
+        global runp_connections
+        global runp_lock
+        with runp_lock:
+            if runp_connections > XTERM_MAX_CONNECTION:
                 self.close()
                 raise Exception
-            elif xterm_connections == XTERM_MAX_CONNECTION:
+            elif runp_connections == XTERM_MAX_CONNECTION:
                 self.accept()
                 self.close(code=XTERM_CONNECTION_LIMIT_CODE)
                 return
-            xterm_connections += 1
+            runp_connections += 1
         self.connected = True
         self.accept()
 
@@ -109,11 +117,11 @@ class RunProcessConsumer(WebsocketConsumer):
             os.waitpid(self.child_pid, 0)
             print(f"Child process {self.child_pid} exited by SIGKILL")
         if self.connected:
-            lock = threading.Lock()
-            global xterm_connections
-            with lock:
-                xterm_connections -= 1
-                if xterm_connections < 0:
+            global runp_connections
+            global runp_lock
+            with runp_lock:
+                runp_connections -= 1
+                if runp_connections < 0:
                     raise Exception
             print('disconnected')
 

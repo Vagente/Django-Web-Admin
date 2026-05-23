@@ -1,9 +1,11 @@
 <!doctype html>
 <html style="height: calc(100% - 50px)" lang="en">
 <head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@6.0.0/css/xterm.min.css">
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"-->
+<!--          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <title>xterm</title>
 </head>
 
@@ -27,6 +29,18 @@
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
 <script>
+    function keepFirstPath(url) {
+        const parsed = new URL(url);
+        // If already root, do nothing (preserve original trailing slash or absence)
+        if (parsed.pathname === '/' || parsed.pathname === '') {
+        return parsed.host;
+        }
+        // Extract first non‑empty segment
+        const first = parsed.pathname.split('/').filter(Boolean)[0];
+        // Rebuild with origin + '/' + first segment (query & hash stripped)
+        return parsed.host + '/' + first;
+       }
+
     const terminal = new Terminal({
         theme: {
             background: '#171717',
@@ -41,7 +55,7 @@
     if (window.location.protocol === 'https:')
         ws_protocol = 'wss://'
     const socket = new WebSocket(
-        ws_protocol + location.host + '/ws/xterm/'
+        ws_protocol + keepFirstPath(location.href) + '/ws/xterm/'
     )
     console.log()
     const status = document.getElementById("status")

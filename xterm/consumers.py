@@ -9,12 +9,15 @@ import struct
 import termios
 import threading
 import time
+from django.conf import settings
+from time import sleep
 
 from channels.generic.websocket import WebsocketConsumer
 
 from .constants import *
 
 xterm_connections = 0
+xterm_lock = threading.Lock()
 
 
 def valid_username(username):
@@ -54,7 +57,8 @@ class XtermConsumer(WebsocketConsumer):
         return self._child_alive
 
     def read_and_forward_pty_output(self):
-        print("thread started")
+        if settings.DEBUG:
+            print("Started terminal forward")
         epoll = select.epoll()
         epoll.register(self.fd, select.EPOLLIN)
         while True:
@@ -68,7 +72,8 @@ class XtermConsumer(WebsocketConsumer):
             if event and event[0][1] == select.EPOLLIN:
                 output = os.read(self.fd, XTERM_MAX_READ_BYTES).decode()
                 self.send(json.dumps({JSON_TYPE: TYPE_PTY_OUTPUT, JSON_CONTENT: output}))
-        print("thread exited")
+        if settings.DEBUG:
+            print("Ended terminal forward")
 
     def create_child_process(self, username):
         if not valid_username(username):
@@ -79,12 +84,21 @@ class XtermConsumer(WebsocketConsumer):
             os.waitpid(self.child_pid, 0)
         (self.child_pid, self.fd) = pty.fork()
         if self.child_pid == 0:
-            term = os.environ["TERM"] if "TERM" in os.environ else "xterm-256color"
-            term_env: dict = {"TERM": term}
-            os.chdir(os.path.expanduser("~" + username))
-            os.execve("/bin/su", ("django_su", "--login", username), term_env)
+            try:
+                term = os.environ["TERM"] if "TERM" in os.environ else "xterm-256color"
+                term_env: dict = {"TERM": term}
+                os.chdir(os.path.expanduser("~" + username))
+                os.execve("/bin/su", ("django_su", "--login", username), term_env)
+            except Exception as e:
+                print(f"Error in create child process in xterm: {e}")
+                self.send(json.dumps({JSON_TYPE: TYPE_ERROR, JSON_CONTENT: "Failed to create shell process"}))
+                return False
         self._child_alive = True
-        print(f"child process {self.child_pid} started")
+        if self.child_process_alive():
+            print(f"child process {self.child_pid} started")
+        else:
+            print(f"child process {self.child_pid} exited too early")
+            return False
         return True
 
     def create_thread(self):
@@ -100,8 +114,8 @@ class XtermConsumer(WebsocketConsumer):
             self.close()
             return
         global xterm_connections
-        lock = threading.Lock()
-        with lock:
+        global xterm_lock
+        with xterm_lock:
             if xterm_connections > XTERM_MAX_CONNECTION:
                 self.close()
                 raise Exception
@@ -115,6 +129,8 @@ class XtermConsumer(WebsocketConsumer):
 
     def disconnect(self, close_code):
         print(f"close code {close_code}")
+        if self.child_process_alive():
+            os.kill(self.child_pid, signal.SIGTERM)
         if self.t is not None and self.t.is_alive():
             self.stop_event.set()
             self.t.join()
@@ -122,10 +138,12 @@ class XtermConsumer(WebsocketConsumer):
             os.kill(self.child_pid, signal.SIGKILL)
             os.waitpid(self.child_pid, 0)
             print(f"Child process {self.child_pid} exited by SIGKILL")
+        else:
+            print(f"Child process {self.child_pid} exited by SIGTERM")
         if self.connected:
-            lock = threading.Lock()
+            global xterm_lock
             global xterm_connections
-            with lock:
+            with xterm_lock:
                 xterm_connections -= 1
                 if xterm_connections < 0:
                     raise Exception
@@ -161,4 +179,5 @@ class XtermConsumer(WebsocketConsumer):
                     self.create_thread()
                     self.send(json.dumps({JSON_TYPE: TYPE_INIT}))
         except KeyError or json.decoder.JSONDecodeError:
-            return
+            print("Error in run_process.consumers: ")
+            print(e)

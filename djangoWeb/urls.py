@@ -18,15 +18,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django_otp.admin import OTPAdminSite
 import django.contrib.auth.views as auth_views
+from django.conf import settings
 
 admin.site.__class__ = OTPAdminSite
 
 
 urlpatterns = [
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('admin/', admin.site.urls, name="admin"),
-    path('terminal/', include('xterm.urls')),
-    path('filemanager/', include('file_manager.urls')),
-    path('run_process/', include('run_process.urls')),
-    path('', include('dashboard.urls'))
+    path(settings.BASE_ROOT_URL + 'logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path(settings.BASE_ROOT_URL + 'admin/', admin.site.urls, name="admin"),
+    path(settings.BASE_ROOT_URL + 'terminal/', include('xterm.urls')),
+    path(settings.BASE_ROOT_URL + 'filemanager/', include('file_manager.urls')),
+    path(settings.BASE_ROOT_URL + 'run_process/', include('run_process.urls')),
+    path(settings.BASE_ROOT_URL + '', include('dashboard.urls'))
 ]

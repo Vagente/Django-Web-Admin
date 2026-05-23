@@ -24,13 +24,16 @@ SECRET_KEY = 'django-insecure-nbt&1-45&5uaxcyrt3e8nf+8s(ilpq4rd%r-a8hhvm2=t($aw3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-LOGIN_URL = '/login'
-OTP_LOGIN_URL = '/login/otp'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login'
+BASE_ROOT_URL = 'django/'
+# BASE_ROOT_URL = ''
 
-FILE_MANAGER_ROOT_PATH = '/home/vagente/djangoWeb_media'
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.39']
+LOGIN_URL = '/' + BASE_ROOT_URL + 'login'
+OTP_LOGIN_URL = '/' + BASE_ROOT_URL + 'login/otp'
+LOGIN_REDIRECT_URL = '/' + BASE_ROOT_URL + ''
+LOGOUT_REDIRECT_URL = '/' + BASE_ROOT_URL + 'login'
+
+FILE_MANAGER_ROOT_PATH = '/tmp/test'
 # FILE_MANAGER_ROOT_PATH = '/'
 # Application definition
 
@@ -144,7 +147,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = BASE_ROOT_URL + 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
