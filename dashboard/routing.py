@@ -4,5 +4,5 @@ from django.urls import re_path
 from . import consumers
 
 websocket_urlpatterns = [
-    re_path(settings.BASE_ROOT_URL + r"ws/stats/", consumers.StatsConsumer.as_asgi()),
+    re_path(f"^{settings.BASE_ROOT_URL}" + r"ws/stats/", consumers.StatsConsumer.as_asgi()),
 ]
