@@ -23,8 +23,6 @@ Python version 3.11 and above. Should work with lower version of python if you s
 ## Setup
 - Clone project and setup env.
 - Install and setup redis-server(disable redis in settings.py if you don't want this)
-- HTTPS(If you don't want https, remove the last 4 lines in settings.py)
-  - Install and setup caddy with Caddyfile in the project root for https and other functionalities. (Or use your own reverse proxy)
 - Run the following in project root.
   ```shell
   python manage.py migrate
@@ -32,8 +30,11 @@ Python version 3.11 and above. Should work with lower version of python if you s
   # Add a backup code to "username" to login with otp
   python manage.py addstatictoken username
   ```
+- HTTPS (Optional)
+  - Install and setup caddy with Caddyfile in the project root for https and other functionalities. (Or use your own reverse proxy)
+  - Uncomment last 4 lines of settings.py
 
-## Coding detail
+## Coding details
 Web terminal is implemented with websocket, frontend is xterm.js. Backend is implemented with pty.fork()
 pseudo terminal. User login with "su --loign"
 
