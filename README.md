@@ -22,7 +22,7 @@ Python version 3.11 and above. Should work with lower version of python if you s
 "termios.tcsetwinsize" with commented out code "set_winsize" (in xterm/consumers.py). (Maybe I should do a version checking)
 ## Setup
 - Clone project and setup env.
-- Install and setup redis-server(disable redis in settings.py if you don't want this)
+- Install and setup valkey or redis(disable redis in settings.py if you don't want this)
 - Change the root folder for file manager in settings.py
 - Run the following in project root.
   ```shell
@@ -30,10 +30,14 @@ Python version 3.11 and above. Should work with lower version of python if you s
   python manage.py createsuperuser 
   # Add a backup code to "username" to login with otp
   python manage.py addstatictoken username
-  ```
+  # Run server
+  python manage.py runserver
+  ``` 
+
 - HTTPS (Optional)
   - Install and setup caddy with Caddyfile in the project root for https and other functionalities. (Or use your own reverse proxy)
-  - Uncomment last 4 lines of settings.py
+  - Uncomment last 5 lines of settings.py
+  - Note that enabling HTTPS doesn't make your site secure, there is also disabling https, change secret key, etc. (Not to mention my code might have exploit). See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 
 ## Coding details
