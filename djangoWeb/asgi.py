@@ -26,7 +26,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangoWeb.settings')
 
 django_asgi_app = get_asgi_application()
 
-#Websocket serves at 2 different url: {settings.BASE_ROOT_URL}/ws/ and {module name}/ws/. See routing.py for detail.
 
 application = ProtocolTypeRouter(
     {

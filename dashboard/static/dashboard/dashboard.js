@@ -47,25 +47,6 @@ setInterval(update_data, 60 * 1000)
 const _time = dateTime.now().setZone(_server_timezone)
 timezone.innerText = `UTC${_time.offset / 60}`
 
-function keepFirstPath(url) {
-    const parsed = new URL(url);
-    // If already root, do nothing (preserve original trailing slash or absence)
-    if (parsed.pathname === '/' || parsed.pathname === '') {
-    return parsed.host;
-    }
-    // Extract first non‑empty segment
-    const first = parsed.pathname.split('/').filter(Boolean)[0];
-    // Rebuild with origin + '/' + first segment (query & hash stripped)
-    return parsed.host + '/' + first;
-   }
-
-let ws_protocol = 'ws://'
-if (window.location.protocol === 'https:')
-    ws_protocol = 'wss://'
-const socket = new WebSocket(
-    ws_protocol + keepFirstPath(location.href) + '/ws/stats/'
-)
-
 
 const cpu_usage_element = document.getElementById("cpu_usage")
 const memory_usage_element = document.getElementById("memory_usage")

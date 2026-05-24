@@ -29,18 +29,6 @@
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
 <script>
-    function keepFirstPath(url) {
-        const parsed = new URL(url);
-        // If already root, do nothing (preserve original trailing slash or absence)
-        if (parsed.pathname === '/' || parsed.pathname === '') {
-        return parsed.host;
-        }
-        // Extract first non‑empty segment
-        const first = parsed.pathname.split('/').filter(Boolean)[0];
-        // Rebuild with origin + '/' + first segment (query & hash stripped)
-        return parsed.host + '/' + first;
-       }
-
     const terminal = new Terminal({
         theme: {
             background: '#171717',
@@ -55,9 +43,8 @@
     if (window.location.protocol === 'https:')
         ws_protocol = 'wss://'
     const socket = new WebSocket(
-        ws_protocol + keepFirstPath(location.href) + '/ws/xterm/'
+        ws_protocol + location.host + '/{{ base_url }}' + 'ws/xterm/'
     )
-    console.log()
     const status = document.getElementById("status")
     const button = document.getElementById("button")
 

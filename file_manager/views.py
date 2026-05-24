@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from autobahn.flatbuffers.encode import Write
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse, FileResponse, Http404
 from django.shortcuts import render
@@ -48,6 +49,7 @@ def file_manager(request):
         'dir_size': DIR_SIZE,
         'cancel_dir_size': CANCEL_DIR_SIZE,
         'form': UploadFileForm(),
+        "base_url": settings.BASE_ROOT_URL
     }
     return render(request, 'file_manager/index.html', context)
 

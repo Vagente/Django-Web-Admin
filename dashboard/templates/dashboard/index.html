@@ -67,9 +67,17 @@
     {% load static %}
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
     <script>
+        console.log
         const dateTime = luxon.DateTime
         const boot_date = dateTime.fromSeconds({{ boot_time }})
         const _server_timezone = '{{ time_zone }}'
+        let ws_protocol = 'ws://'
+        if (window.location.protocol === 'https:'){
+            ws_protocol = 'wss://'
+        }
+        const socket = new WebSocket(
+            ws_protocol + location.host + '/{{ base_url }}' + 'ws/stats/'
+        )
     </script>
     <script src="{% static 'dashboard/dashboard.js' %}"></script>
 {% endblock %}

@@ -3,5 +3,5 @@ from django.conf import settings
 from . import consumers
 
 websocket_urlpatterns = [
-    re_path(f"^({settings.BASE_ROOT_URL}|terminal/)" + r"ws/xterm/", consumers.XtermConsumer.as_asgi()),
+    re_path(f"^({settings.BASE_ROOT_URL})" + r"ws/xterm/", consumers.XtermConsumer.as_asgi()),
 ]

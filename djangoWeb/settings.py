@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-nbt&1-45&5uaxcyrt3e8nf+8s(ilpq4rd%r-a8hhvm2=t($aw3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# BASE_ROOT_URL = 'django/'
+# BASE_ROOT_URL = 'django/test/'
 BASE_ROOT_URL = ''
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']

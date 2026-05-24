@@ -171,17 +171,6 @@
     {% load static %}
     <script src="{% static 'file_manager/file_manager.js' %}"></script>
     <script>
-        function keepFirstPath(url) {
-            const parsed = new URL(url);
-            // If already root, do nothing (preserve original trailing slash or absence)
-            if (parsed.pathname === '/' || parsed.pathname === '') {
-            return parsed.host;
-            }
-            // Extract first non‑empty segment
-            const first = parsed.pathname.split('/').filter(Boolean)[0];
-            // Rebuild with origin + '/' + first segment (query & hash stripped)
-            return parsed.host + '/' + first;
-           }
         const _download_url = "{% url 'file_manager:download' %}"
 
         let ws_protocol = 'ws://'
@@ -189,7 +178,7 @@
             ws_protocol = 'wss://'
 
         const socket = new WebSocket(
-            ws_protocol + keepFirstPath(location.href) + '/ws/file_manager/'
+            ws_protocol + location.host + '/{{ base_url }}' + 'ws/file_manager/'
         )
 
         let _current_path = [];

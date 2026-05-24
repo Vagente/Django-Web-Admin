@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -20,5 +21,6 @@ def index(request):
         "JSON_CONTENT": JSON_CONTENT,
         "TYPE_EXITED": TYPE_EXITED,
         "TYPE_ERROR": TYPE_ERROR,
+        "base_url": settings.BASE_ROOT_URL
     }
     return render(request, 'xterm/index.html', context)

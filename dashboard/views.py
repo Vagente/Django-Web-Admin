@@ -26,7 +26,8 @@ def index(request):
     context = {
         "boot_time": psutil.boot_time(),
         "time_zone": settings.TIME_ZONE,
-        "load_avg": f"{load[0]}, {load[1]}, {load[2]}"
+        "load_avg": f"{load[0]}, {load[1]}, {load[2]}",
+        "base_url": settings.BASE_ROOT_URL
     }
     return render(request, 'dashboard/index.html', context)
 

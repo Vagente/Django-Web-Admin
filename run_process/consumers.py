@@ -17,12 +17,6 @@ from . import *
 runp_connections = 0
 runp_lock = threading.Lock()
 
-
-def set_winsize(fd, row, col, xpix=0, ypix=0):
-    winsize = struct.pack("HHHH", row, col, xpix, ypix)
-    fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
-
-
 class RunProcessConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -148,7 +142,6 @@ class RunProcessConsumer(WebsocketConsumer):
                 if type(rows) is int and type(cols) is int:
                     try:
                         termios.tcsetwinsize(self.fd, (rows, cols))
-                        # set_winsize(self.fd, rows, cols)
                     except Exception as e:
                         print(f"another error {e}")
 
