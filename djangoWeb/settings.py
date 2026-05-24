@@ -33,7 +33,7 @@ OTP_LOGIN_URL = '/' + BASE_ROOT_URL + 'login/otp'
 LOGIN_REDIRECT_URL = '/' + BASE_ROOT_URL + ''
 LOGOUT_REDIRECT_URL = '/' + BASE_ROOT_URL + 'login'
 
-FILE_MANAGER_ROOT_PATH = '/tmp/test'
+FILE_MANAGER_ROOT_PATH = '/tmp/'
 # FILE_MANAGER_ROOT_PATH = '/'
 # Application definition
 

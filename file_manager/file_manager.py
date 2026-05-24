@@ -52,10 +52,10 @@ def _valid_path(path, path_should_exist, root):
 
     if not path_should_exist and not _parents_valid(p):
         return False, f"Path '{str(path)}' contains invalid path(symlink or didn't exist)"
-
     if settings.DEBUG:
         root = Path(settings.FILE_MANAGER_ROOT_PATH)
         if root != p and not Path(settings.FILE_MANAGER_ROOT_PATH) in p.parents:
+            raise ValueError("Path is outside root path, this shouldn't happen.")
             return False, f"Path {p} not in root"
     return True, p
 
@@ -86,13 +86,12 @@ def _resolve_path(should_exist, idxes=(1,)):
                     return False, data
                 args[idx] = data
             try:
-                res = func(*args, **kwargs)
+                return func(*args, **kwargs)
             except PermissionError:
                 return False, 'Permission denied'
             except OSError as e:
                 print(e)
                 return False, 'OSError'
-            return res
 
         return wrapper
 
@@ -123,32 +122,56 @@ def _copy_file(src: Path, dest: Path) -> tuple[bool, str]:
     return True, 'success'
 
 
-def _get_dir_size(path: Path):
-    if not path.is_dir() or path.is_symlink():
-        return False, f"path is not a directory: {path.name}"
-    size = 0
-    last_count = 0
-    current_count = 0
-    start = time.time()
-    for p, directory, files in os.walk(path):
-        p = Path(p)
-        for i in directory + files:
-            current_count += 1
-            size += (p / i).lstat().st_size
-            if current_count - last_count < 10000:
-                continue
-            last_count = current_count
-            tmp = time.time()
-            if (tmp - start) > 0.5:
-                start = tmp
-                yield [size, current_count]
+def _get_dir_size(path: Path, timer: int=1000):
+    """
+    Sanitize and resolve path before pass it here.
+    Yields folder size and file, folder count for every 1000 files counted.
+    """
+    # size, file count, folder count
+    result = [0, 0, 0]
+    for entry in os.scandir(path):
+        if entry.is_file(follow_symlinks=False):
+            result[0] += entry.stat(follow_symlinks=False).st_size
+            result[1] += 1
+        elif entry.is_dir(follow_symlinks=False):
+            result[2] += 1
+            for res, tmp in _get_dir_size(Path(entry.path), timer):
+                yield [a + b for a, b in zip(result, res)], tmp
+            result = [a + b for a, b in zip(result, res)]
+            timer = tmp
+        timer -= 1
+        if timer == 0:
+            timer = 1000
+            yield result, timer
+    yield result, timer
 
-    yield [size, current_count]
 
+
+# def _get_dir_size(path: Path):
+#     if not path.is_dir() or path.is_symlink():
+#         return False, f"path is not a directory: {path.name}"
+#     size = 0
+#     last_count = 0
+#     current_count = 0
+#     start = time.time()
+#     for p, directory, files in os.walk(path):
+#         p = Path(p)
+#         for i in directory + files:
+#             current_count += 1
+#             size += (p / i).lstat().st_size
+#             if current_count - last_count < 10000:
+#                 continue
+#             last_count = current_count
+#             tmp = time.time()
+#             if (tmp - start) > 0.5:
+#                 start = tmp
+#                 yield [size, current_count]
+#
+#     yield [size, current_count]
 
 class FileManager(object):
-    def __init__(self):
-        self.root = Path(str(settings.FILE_MANAGER_ROOT_PATH)).resolve()
+    def __init__(self, root_path=None):
+        self.root = Path(root_path) if root_path is not None else Path(str(settings.FILE_MANAGER_ROOT_PATH)).resolve()
         if not self.root.is_absolute() or not self.root.exists() or not self.root.is_dir() or self.root.is_symlink():
             raise ValueError("Invalid root path")
 
@@ -212,4 +235,11 @@ class FileManager(object):
 
     @_resolve_path((True,))
     def get_dir_size(self, path):
-        yield from _get_dir_size(path)
+        try:
+            for res, tmp in _get_dir_size(path):
+                yield res
+        except PermissionError:
+            yield False, 'Permission denied'
+        except OSError as e:
+            print(e)
+            yield False, 'OSError'

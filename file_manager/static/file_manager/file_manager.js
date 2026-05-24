@@ -173,7 +173,7 @@ dropdown_modal.addEventListener('show.bs.modal', event => {
     const button = event.relatedTarget;
     let path = button.getAttribute('data-bs-path')
     if (path === '.') {
-        path = _current_path
+        path = 'Root/' + _current_path.join('/')
     }
     const func_name = button.getAttribute('data-bs-function')
     const title = dropdown_modal.querySelector('.modal-header h1')
@@ -220,6 +220,7 @@ dropdown_modal.addEventListener('show.bs.modal', event => {
 const file_property_modal = document.getElementById("file_property_modal")
 const size_span = file_property_modal.querySelector("#folder_size")
 const count_span = file_property_modal.querySelector("#file_count")
+const folder_span = file_property_modal.querySelector("#folder_count")
 const folder_size_loading = file_property_modal.querySelector(".spinner-border")
 
 file_property_modal.addEventListener("shown.bs.modal", event => {
@@ -227,7 +228,7 @@ file_property_modal.addEventListener("shown.bs.modal", event => {
     const button = event.relatedTarget;
     const path = button.getAttribute('data-bs-path')
     const header = file_property_modal.querySelector("h1")
-    header.textContent = 'Property of ' + path
+    header.textContent = path === '.' ? 'Property of Root' : 'Property of ' + path
     file_operations('dir_size')([path])
 })
 

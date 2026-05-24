@@ -17,13 +17,16 @@ class FileManagerConsumer(WebsocketConsumer):
         self.stop_event = threading.Event()
 
     def send_folder_size(self, path):
-        last_item = None
+        last_item = next(self.manager.get_dir_size(path))
+        if type(last_item) == tuple:
+            self.send(json.dumps([DIR_SIZE, True, last_item, path]))
+            print("send folder size exited")
+            return
         for data in self.manager.get_dir_size(path):
             if self.stop_event.is_set():
                 print("send folder size thread ended by signal")
                 return
-            if last_item is not None:
-                self.send(json.dumps([DIR_SIZE, False, last_item, path]))
+            self.send(json.dumps([DIR_SIZE, False, last_item, path]))
             last_item = data
         self.send(json.dumps([DIR_SIZE, True, last_item, path]))
         print("send folder size threaded completed")

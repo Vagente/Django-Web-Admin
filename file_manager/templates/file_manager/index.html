@@ -88,10 +88,13 @@
                             <span class="visually-hidden">Loading...</span>
                         </div>
                         <div>
-                            <span id="folder_size"></span>
+                            <span id="folder_size">Total size: 0B</span>
                         </div>
                         <div>
-                            <span id="file_count"></span>
+                            <span id="file_count">Total files: 0</span>
+                        </div>
+                        <div>
+                            <span id="folder_count">Total subfolders: 0</span>
                         </div>
                     </div>
                 </div>
@@ -117,6 +120,10 @@
                 </div>
             </header>
             <div>
+                <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#file_property_modal"
+                        data-bs-path="."
+                        data-bs-function="dir_size">Root Property
+                </button>
                 <button class="btn btn-secondary" data-bs-toggle='modal' data-bs-target="#dropdown_modal"
                         data-bs-path="."
                         data-bs-function="create_folder">New Folder
@@ -269,10 +276,18 @@
                 alert(content)
                 list_folder(_current_path)
             } else if (data_type === {{ dir_size }}) {
-                const size = content[0]
-                const count = content[1]
-                size_span.textContent = 'Total size: ' + formatBytes(size)
-                count_span.textContent = 'Total files: ' + count
+                if (content.length === 2) {
+                    size_span.textContent += `, ${content[1]}`
+                    count_span.textContent += `, ${content[1]}`
+                    folder_span.textContent += `, ${content[1]}`
+                } else {
+                    const size = content[0]
+                    const file_count = content[1]
+                    const folder_count = content[2]
+                    size_span.textContent = 'Total size: ' + formatBytes(size)
+                    count_span.textContent = 'Total files: ' + file_count
+                    folder_span.textContent = 'Total subfolders: ' + folder_count
+                }
                 if (res) {
                     folder_size_loading.style.display = "none"
                 }
