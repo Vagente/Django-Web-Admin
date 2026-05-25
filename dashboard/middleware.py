@@ -1,3 +1,5 @@
+# OTP middleware, but for websocket, reference django_otp.middleware.OTPMiddleware
+
 from asgiref.sync import sync_to_async
 from channels.middleware import BaseMiddleware
 from django_otp import DEVICE_ID_SESSION_KEY
