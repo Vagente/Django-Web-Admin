@@ -1,13 +1,15 @@
 [project]
 name = "django-web-admin"
 version = "0.1.0"
-requires-python = ">=3.14"
+requires-python = "~=3.14"
 dependencies = [
     "django~=6.0.5",
     "channels[daphne]~=4.3.2",
     "django-otp~=1.7.0",
     "psutil~=7.2.2",
     "channels-redis~=4.3.0",
+    "asgiref~=3.11.1",
+
     #optional
     # for displaying qrcode of otp device
     "qrcode~=8.2",
