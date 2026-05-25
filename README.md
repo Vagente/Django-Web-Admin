@@ -15,6 +15,7 @@ Current implemented functionality:
 
 - dashboard with basic system info. (Allow all user)
 - journalctl log display (Allow stuff authenticated with OTP)
+- Django built in admin site which requires OTP to access
 - OTP auth middleware for websocket to prevent access from non-otp verified user.
 
 ## Compatibility
