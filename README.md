@@ -1,25 +1,24 @@
 ## This project is only partially tested and may contain exploits. Use it for study or research
 
 ## Overview
-A webmin like website written with django, django-channels, django-otp, 
-bootstrap, xterm.js, chart.js etc.
+A webmin like website written with django, django-channels, django-otp.
+Frontend uses bootstrap, xterm.js, etc.
 
 Current implemented functionality: 
-- web terminal
+- web terminal that allows login as different user with su
 - file manager
   - Only manage files under FILE_MANAGER_ROOT_PATH in settings.py
   - Browse, move, create and delete folder and file
   - Upload file.
-  - File download, current using synchronous open(), which means the file will be fully consumed before serving. trying to find an async solution
+  - File download, current using synchronous open(), which means the file will be fully consumed before serving.
   - file rename is done via the move function. the behavior should be the same as the linux 'mv'
 
-- dashboard with basic system info, charts currently not implemented.
+- dashboard with basic system info.
+- journalctl log display
 
 ## Compatibility
-The project is tested on ubuntu 22.04 but should ideally work on most Linux distros
+Should compatible with most modern Linux distro, tested on Debian 13, Arch. 
 
-Python version 3.11 and above. Should work with lower version of python if you swap 
-"termios.tcsetwinsize" with commented out code "set_winsize" (in xterm/consumers.py). (Maybe I should do a version checking)
 ## Setup
 - Clone project and setup env.
 - Install and setup valkey or redis(disable redis in settings.py if you don't want this)
