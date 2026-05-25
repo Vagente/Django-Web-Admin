@@ -5,16 +5,17 @@ A webmin like website written with django, django-channels, django-otp.
 Frontend uses bootstrap, xterm.js, etc.
 
 Current implemented functionality: 
-- web terminal that allows login as different user with su
-- file manager
+- web terminal that allows login as different user with su (Only allow access from superuser authenticated with OTP)
+- file manager (Only allow access from superuser authenticated with OTP)
   - Only manage files under FILE_MANAGER_ROOT_PATH in settings.py
   - Browse, move, create and delete folder and file
   - Upload file.
   - File download, current using synchronous open(), which means the file will be fully consumed before serving.
   - file rename is done via the move function. the behavior should be the same as the linux 'mv'
 
-- dashboard with basic system info.
-- journalctl log display
+- dashboard with basic system info. (Allow all user)
+- journalctl log display (Allow stuff authenticated with OTP)
+- OTP auth middleware for websocket to prevent access from non-otp verified user.
 
 ## Compatibility
 Should compatible with most modern Linux distro, tested on Debian 13, Arch. 
