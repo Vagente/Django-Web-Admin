@@ -25,7 +25,7 @@ Should compatible with most modern Linux distro, tested on Debian 13, Arch.
 - Clone project and setup env.
 - Install and setup valkey or redis(disable redis in settings.py if you don't want this)
 - Change the root folder for file manager in settings.py
-- Run the following in project root.
+- Run the following in src folder.
   ```shell
   python manage.py migrate
   python manage.py createsuperuser 
