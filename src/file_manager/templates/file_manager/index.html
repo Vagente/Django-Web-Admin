@@ -231,8 +231,11 @@
             connect_status.innerHTML = '<span style="background-color: red;">disconnected</span>'
             connect_button.textContent = 'Connect'
             connect_button.classList.replace("btn-danger", "btn-success")
-            if (e["code"] === 4000)
+            const close_code = e["code"]
+            if (close_code === {{ init_err }})
                 alert("Root folder error(didn't exist, doesn't have permission or is not a folder)")
+            else if (close_code === {{ max_connection_err }})
+                alert("Max Connection limit {{ max_connection_limit }} reached")
         }
 
         socket.onmessage = function (event) {

@@ -6,6 +6,8 @@ from channels.generic.websocket import WebsocketConsumer
 from file_manager import *
 from file_manager.file_manager import FileManager
 from channels.exceptions import StopConsumer
+from django.core.cache import cache
+from django.db import DataError
 
 
 class FileManagerConsumer(WebsocketConsumer):
@@ -15,6 +17,7 @@ class FileManagerConsumer(WebsocketConsumer):
         self.funcs = None
         self.t = None
         self.stop_event = threading.Event()
+        cache.add(FILEMAN_CON_CACHE_KEY, 0, timeout=None)
 
     def send_folder_size(self, path):
         last_item = next(self.manager.get_dir_size(path))
@@ -66,11 +69,22 @@ class FileManagerConsumer(WebsocketConsumer):
         if not self.scope["user"].is_verified or not self.scope["user"].is_superuser:
             self.close()
             raise StopConsumer
+        with cache.lock(REDIS_LOCK_PREFIX + FILEMAN_CON_CACHE_KEY):
+            num = cache.get(FILEMAN_CON_CACHE_KEY)
+            if num > FILEMAN_MAX_CON:
+                self.close()
+                raise DataError(f"xterm connections {num} exceeds max connection")
+            elif num == FILEMAN_MAX_CON:
+                self.accept()
+                self.close(code=FILEMAN_CONNECTION_LIMIT_CODE)
+                raise StopConsumer
+            else:
+                cache.incr(FILEMAN_CON_CACHE_KEY, delta=1)
         try:
             self.manager = FileManager()
         except ValueError:
             self.accept()
-            self.close(code=4000)
+            self.close(code=FILEMAN_INIT_ERR_CODE)
             raise StopConsumer
         self.funcs = {
             LIST_FILE: self.manager.list_files,
@@ -87,4 +101,8 @@ class FileManagerConsumer(WebsocketConsumer):
             self.stop_event.set()
             self.t.join()
             self.stop_event.clear()
+        with cache.lock(REDIS_LOCK_PREFIX + FILEMAN_CON_CACHE_KEY):
+            cache.decr(FILEMAN_CON_CACHE_KEY, delta=1)
+            if cache.get(FILEMAN_CON_CACHE_KEY) == 0:
+                cache.delete(FILEMAN_CON_CACHE_KEY)
         raise StopConsumer

@@ -11,11 +11,10 @@ import time
 
 from channels.exceptions import StopConsumer
 from channels.generic.websocket import WebsocketConsumer
-
 from . import *
+from django.core.cache import cache
+from django.db import DataError
 
-runp_connections = 0
-runp_lock = threading.Lock()
 
 class RunProcessConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -27,6 +26,7 @@ class RunProcessConsumer(WebsocketConsumer):
         self.connected = False
         self._child_alive = False
         self.processes = [('/bin/bash', ['-c', '/bin/journalctl -n 100 -f'])]
+        cache.add(RUNPROCESS_CON_CACHE_KEY, 0, timeout=None)
 
     def child_process_alive(self):
         """
@@ -88,18 +88,17 @@ class RunProcessConsumer(WebsocketConsumer):
         if not self.scope["user"].is_verified or not self.scope["user"].is_staff:
             self.close()
             raise StopConsumer
-        global runp_connections
-        global runp_lock
-        with runp_lock:
-            if runp_connections > XTERM_MAX_CONNECTION:
+        with cache.lock(REDIS_LOCK_PREFIX + RUNPROCESS_CON_CACHE_KEY):
+            num = cache.get(RUNPROCESS_CON_CACHE_KEY)
+            if num > XTERM_MAX_CON:
                 self.close()
-                print(f"runprocess_connection {runp_connections} exceeds max connection")
-                raise StopConsumer
-            elif runp_connections == XTERM_MAX_CONNECTION:
+                raise DataError(f"xterm connections {num} exceeds max connection")
+            elif num == XTERM_MAX_CON:
                 self.accept()
                 self.close(code=XTERM_CONNECTION_LIMIT_CODE)
                 raise StopConsumer
-            runp_connections += 1
+            else:
+                cache.incr(RUNPROCESS_CON_CACHE_KEY, delta=1)
         self.connected = True
         self.accept()
 
@@ -112,15 +111,12 @@ class RunProcessConsumer(WebsocketConsumer):
             os.kill(self.child_pid, signal.SIGKILL)
             os.waitpid(self.child_pid, 0)
             print(f"Child process {self.child_pid} exited by SIGKILL")
-        if self.connected:
-            global runp_connections
-            global runp_lock
-            with runp_lock:
-                runp_connections -= 1
-                if runp_connections < 0:
-                    print(f"runprocess_connection {runp_connections} is less than 0")
-                    raise StopConsumer
-            print('disconnected')
+        if not self.connected:
+            raise StopConsumer
+        with cache.lock(REDIS_LOCK_PREFIX + RUNPROCESS_CON_CACHE_KEY):
+            cache.decr(RUNPROCESS_CON_CACHE_KEY, delta=1)
+            if cache.get(RUNPROCESS_CON_CACHE_KEY) == 0:
+                cache.delete(RUNPROCESS_CON_CACHE_KEY)
         raise StopConsumer
 
     def receive(self, text_data=None, bytes_data=None):

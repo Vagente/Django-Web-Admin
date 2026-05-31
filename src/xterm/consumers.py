@@ -11,15 +11,11 @@ import threading
 import time
 
 from channels.exceptions import StopConsumer
-from django.conf import settings
-from time import sleep
-
+from django.core.cache import cache
+from django.db import DataError
 from channels.generic.websocket import WebsocketConsumer
 
 from .constants import *
-
-xterm_connections = 0
-xterm_lock = threading.Lock()
 
 
 def valid_username(username):
@@ -46,6 +42,7 @@ class XtermConsumer(WebsocketConsumer):
         self.stop_event = threading.Event()
         self.connected = False
         self._child_alive = False
+        cache.add(XTERM_CON_CACHE_KEY, 0, timeout=None)
 
     def child_process_alive(self):
         """
@@ -115,18 +112,17 @@ class XtermConsumer(WebsocketConsumer):
         if not self.scope["user"].is_verified or not self.scope["user"].is_superuser:
             self.close()
             raise StopConsumer
-        global xterm_connections
-        global xterm_lock
-        with xterm_lock:
-            if xterm_connections > XTERM_MAX_CONNECTION:
+        with cache.lock(REDIS_LOCK_PREFIX + XTERM_CON_CACHE_KEY):
+            num = cache.get(XTERM_CON_CACHE_KEY)
+            if num > XTERM_MAX_CON:
                 self.close()
-                print(f"xterm connections {xterm_connections} exceeds max connection")
-                raise StopConsumer
-            elif xterm_connections == XTERM_MAX_CONNECTION:
+                raise DataError(f"xterm connections {num} exceeds max connection")
+            elif num == XTERM_MAX_CON:
                 self.accept()
                 self.close(code=XTERM_CONNECTION_LIMIT_CODE)
                 raise StopConsumer
-            xterm_connections += 1
+            else:
+                cache.incr(XTERM_CON_CACHE_KEY, delta=1)
         self.connected = True
         self.accept()
 
@@ -143,15 +139,12 @@ class XtermConsumer(WebsocketConsumer):
             print(f"Child process {self.child_pid} exited by SIGKILL")
         else:
             print(f"Child process {self.child_pid} exited by SIGTERM")
-        if self.connected:
-            global xterm_lock
-            global xterm_connections
-            with xterm_lock:
-                xterm_connections -= 1
-                if xterm_connections < 0:
-                    print(f"xterm connections {xterm_connections} exceeds max connection")
-                    raise StopConsumer
-            print('disconnected')
+        if not self.connected:
+            raise StopConsumer
+        with cache.lock(REDIS_LOCK_PREFIX + XTERM_CON_CACHE_KEY):
+            cache.decr(XTERM_CON_CACHE_KEY, delta=1)
+            if cache.get(XTERM_CON_CACHE_KEY) == 0:
+                cache.delete(XTERM_CON_CACHE_KEY)
         raise StopConsumer
 
     def receive(self, text_data=None, bytes_data=None):
@@ -184,5 +177,4 @@ class XtermConsumer(WebsocketConsumer):
                     self.create_thread()
                     self.send(json.dumps({JSON_TYPE: TYPE_INIT}))
         except KeyError or json.decoder.JSONDecodeError as e:
-            print("Error in run_process.consumers: ")
-            print(e)
+            print(f"Error in run_process.consumers: {e}")

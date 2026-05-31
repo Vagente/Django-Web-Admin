@@ -23,7 +23,7 @@ Should compatible with most modern Linux distro, tested on Debian 13, Arch.
 
 ## Setup
 - Clone project and setup env.
-- Install and setup valkey or redis(disable redis in settings.py if you don't want this)
+- Install and setup valkey or redis
 - Change the root folder for file manager in settings.py
 - Run the following in src folder.
   ```shell

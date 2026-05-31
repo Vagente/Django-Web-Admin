@@ -35,6 +35,12 @@ LOGOUT_REDIRECT_URL = '/' + BASE_ROOT_URL + 'login'
 
 FILE_MANAGER_ROOT_PATH = '/tmp/'
 # FILE_MANAGER_ROOT_PATH = '/'
+
+# Max concurrent websocket connections allowed for each module(exclude dashboard)
+MAX_WS_CONNECTION_PER_MODULE = 1
+
+# MAX_WS_CONNECTION_PER_MODULE_PER_USER = 1
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -94,7 +100,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": ["redis://127.0.0.1:6379?socket_timeout=10&socket_connect_timeout=5"],
         },
     },
 }
@@ -111,7 +117,7 @@ DATABASES = {
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379",
     }
 }

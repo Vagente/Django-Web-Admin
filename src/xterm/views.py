@@ -11,7 +11,7 @@ def index(request):
     if not request.user.is_superuser:
         raise PermissionDenied
     context = {
-        "MAX_CONNECTION": XTERM_MAX_CONNECTION,
+        "MAX_CONNECTION": XTERM_MAX_CON,
         "CONNECTION_LIMIT_CODE": XTERM_CONNECTION_LIMIT_CODE,
         "JSON_TYPE": JSON_TYPE,
         "TYPE_PTY_INPUT": TYPE_PTY_INPUT,

@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from autobahn.flatbuffers.encode import Write
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse, FileResponse, Http404
@@ -25,6 +24,7 @@ def handle_uploaded_file(file, path):
             for chunk in file.chunks():
                 dest.write(chunk)
     except Exception as e:
+        print(f'Error during file Uploading: {e}')
         return JsonResponse({'message': "Error during write"}, status=400)
     return JsonResponse({'message': message}, status=201)
 
@@ -49,7 +49,10 @@ def file_manager(request):
         'dir_size': DIR_SIZE,
         'cancel_dir_size': CANCEL_DIR_SIZE,
         'form': UploadFileForm(),
-        "base_url": settings.BASE_ROOT_URL
+        "base_url": settings.BASE_ROOT_URL,
+        "init_err": FILEMAN_INIT_ERR_CODE,
+        "max_connection_err": FILEMAN_CONNECTION_LIMIT_CODE,
+        "max_connection_limit": FILEMAN_MAX_CON
     }
     return render(request, 'file_manager/index.html', context)
 

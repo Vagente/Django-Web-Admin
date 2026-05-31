@@ -9,10 +9,11 @@ dependencies = [
     "psutil~=7.2.2",
     "channels-redis~=4.3.0",
     "asgiref~=3.11.1",
-
     #optional
     # for displaying qrcode of otp device
     "qrcode~=8.2",
-    # for redis(valkey) cache, if you don't want this, disable redis cache in setting.py
-    "redis~=7.4.0",
+    # for redis(valkey) cache
+    "django-redis~=6.0.0",
+    "redis~=8.0.0",
+    "hiredis~=3.3.1"
 ]

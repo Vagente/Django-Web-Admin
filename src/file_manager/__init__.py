@@ -1,6 +1,11 @@
-from file_manager.file_manager import FileManager
+from django.conf import settings
 
 DATA_TYPE = 0
+
+FILEMAN_CON_CACHE_KEY = "fileman_ws_con"
+FILEMAN_MAX_CON = settings.MAX_WS_CONNECTION_PER_MODULE
+REDIS_LOCK_PREFIX = "_lock_"
+
 
 LIST_FILE = 0
 CREATE_FILE = 1
@@ -13,5 +18,7 @@ CANCEL_DIR_SIZE = 7
 
 DATA_ARGS = 1
 
+FILEMAN_CONNECTION_LIMIT_CODE = 4000
+FILEMAN_INIT_ERR_CODE = 4001
 # ALL_FUNCTIONS = [LIST_FILE, CREATE_FILE, DELETE_FILE, COPY_FILE, MOVE_FILE, COPY_DIR,
 #                  MAKE_DIR, DELETE_DIR]
