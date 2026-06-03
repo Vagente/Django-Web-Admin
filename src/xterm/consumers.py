@@ -4,11 +4,14 @@ import os
 import pty
 import pwd
 import select
-import signal
+import sys
 import struct
 import termios
 import threading
 import time
+import subprocess
+from subprocess import TimeoutExpired
+from pathlib import PosixPath
 
 from channels.exceptions import StopConsumer
 from django.core.cache import cache
@@ -37,23 +40,21 @@ class XtermConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fd = None
-        self.child_pid = None
+        # self.child_pid = None
         self.t = None
         self.stop_event = threading.Event()
         self.connected = False
-        self._child_alive = False
+        # self._child_alive = False
+        self.sub_process: subprocess.Popen | None = None
         cache.add(XTERM_CON_CACHE_KEY, 0, timeout=None)
 
     def child_process_alive(self):
         """
         returns True if the child process is alive, False otherwise or if the child process pid is None
         """
-        if self.child_pid is not None and self._child_alive:
-            pid, status = os.waitpid(self.child_pid, os.WNOHANG)
-            if pid == self.child_pid:
-                print(f"Child process {self.child_pid} exited with status {status}")
-                self._child_alive = False
-        return self._child_alive
+        if self.sub_process is None or self.sub_process.poll() is not None:
+            return False
+        return True
 
     def read_and_forward_pty_output(self):
         if settings.DEBUG:
@@ -63,7 +64,10 @@ class XtermConsumer(WebsocketConsumer):
         while True:
             time.sleep(0.05)
             if not self.child_process_alive():
+                print(self.sub_process)
                 self.send(json.dumps({JSON_TYPE: TYPE_EXITED}))
+                os.close(self.fd)
+                print(f"subprocess {self.sub_process.pid} exited")
                 break
             if self.stop_event.is_set():
                 break
@@ -74,30 +78,27 @@ class XtermConsumer(WebsocketConsumer):
         if settings.DEBUG:
             print("Ended terminal forward")
 
-    def create_child_process(self, username):
+    def create_child_process(self, username: str):
         if not valid_username(username):
             self.send(json.dumps({JSON_TYPE: TYPE_ERROR, JSON_CONTENT: "Invalid username"}))
             return False
-        if self.child_process_alive():
-            os.kill(self.child_pid, signal.SIGKILL)
-            os.waitpid(self.child_pid, 0)
-        (self.child_pid, self.fd) = pty.fork()
-        if self.child_pid == 0:
+        if self.sub_process is not None and self.sub_process.poll() is None:
+            self.sub_process.terminate()
             try:
-                term = os.environ["TERM"] if "TERM" in os.environ else "xterm-256color"
-                term_env: dict = {"TERM": term}
-                os.chdir(os.path.expanduser("~" + username))
-                os.execve("/bin/su", ("django_su", "--login", username), term_env)
-            except Exception as e:
-                print(f"Error in create child process in xterm: {e}")
-                self.send(json.dumps({JSON_TYPE: TYPE_ERROR, JSON_CONTENT: "Failed to create shell process"}))
-                return False
-        self._child_alive = True
-        if self.child_process_alive():
-            print(f"child process {self.child_pid} started")
-        else:
-            print(f"child process {self.child_pid} exited too early")
+                self.sub_process.wait(3)
+            except TimeoutExpired:
+                self.sub_process.kill()
+        self.fd, slave = pty.openpty()
+        python_exe = sys.executable
+        setup_path = PosixPath(__file__).parent / 'shell_setup.py'
+        if not setup_path.exists():
             return False
+        self.sub_process = subprocess.Popen([python_exe, setup_path,
+                                             "--username", username, "--slave_fd", str(slave)], stdin=slave,
+                                            stdout=slave, stderr=slave, pass_fds=(slave,), start_new_session=True)
+        os.close(slave)
+        if settings.DEBUG:
+            print(f"Subprocess {self.sub_process.pid} created")
         return True
 
     def create_thread(self):
@@ -127,24 +128,32 @@ class XtermConsumer(WebsocketConsumer):
         self.accept()
 
     def disconnect(self, close_code):
-        print(f"close code {close_code}")
-        if self.child_process_alive():
-            os.kill(self.child_pid, signal.SIGTERM)
+        if settings.DEBUG:
+            print(f"close code {close_code}")
         if self.t is not None and self.t.is_alive():
             self.stop_event.set()
             self.t.join()
         if self.child_process_alive():
-            os.kill(self.child_pid, signal.SIGKILL)
-            os.waitpid(self.child_pid, 0)
-            print(f"Child process {self.child_pid} exited by SIGKILL")
+            self.sub_process.terminate()
+        try:
+            self.sub_process.wait(3)
+        except TimeoutExpired:
+            self.sub_process.kill()
+            print(f"Child process {self.sub_process.pid} exited by SIGKILL")
         else:
-            print(f"Child process {self.child_pid} exited by SIGTERM")
+            print(f"Child process {self.sub_process.pid} exited by SIGTERM")
         if not self.connected:
+            print(self.connected)
             raise StopConsumer
         with cache.lock(REDIS_LOCK_PREFIX + XTERM_CON_CACHE_KEY):
             cache.decr(XTERM_CON_CACHE_KEY, delta=1)
             if cache.get(XTERM_CON_CACHE_KEY) == 0:
                 cache.delete(XTERM_CON_CACHE_KEY)
+        try:
+            os.close(self.fd)
+        except OSError as e:
+            if e.errno != 9:
+                raise OSError(e)
         raise StopConsumer
 
     def receive(self, text_data=None, bytes_data=None):
