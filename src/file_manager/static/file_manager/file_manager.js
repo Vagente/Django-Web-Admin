@@ -201,8 +201,10 @@ dropdown_modal.addEventListener('show.bs.modal', event => {
                 if (tmp !== '') {
                     tmp += '/'
                 }
-            } else input_field.value = path
-            args.push(tmp + input_field.value)
+            }
+            let input_val = input_field.value
+            input_val = input_val.startsWith('/') ? input_val.slice(1) : input_val
+            args.push(tmp + input_val)
             file_operations(func_name)(args)
         }
     } else {

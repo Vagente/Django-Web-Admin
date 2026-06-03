@@ -19,11 +19,11 @@ def _parents_valid(p):
     return True
 
 
-def is_valid_filename(name) -> bool:
-    # s = re.fullmatch(r"[^/\\]+", name)
-    if name in {"", ".."}:
-        return False
-    return True
+# def is_valid_filename(name) -> bool:
+#     # s = re.fullmatch(r"[^/\\]+", name)
+#     if name in {"", ".."}:
+#         return False
+#     return True
 
 
 def get_files(path):
@@ -43,20 +43,18 @@ def get_files(path):
 def _valid_path(path, path_should_exist, root):
     if type(path) is not str and type(path) is not pathlib.PosixPath:
         return False, "invalid path type"
-    for j in path.parts:
-        if not is_valid_filename(j):
-            return False, f"Invalid filename: '{j}'"
-    p = root / path
+    # for j in path.parts:
+    #     if not is_valid_filename(j):
+    #         return False, f"Invalid filename: '{j}'"
+    p = (root / path).resolve()
     if path_should_exist != p.exists() and path_should_exist is not None:
         return False, f"Path '{str(path)}' existence should be {path_should_exist}"
 
     if not path_should_exist and not _parents_valid(p):
         return False, f"Path '{str(path)}' contains invalid path(symlink or didn't exist)"
-    if settings.DEBUG:
-        root = Path(settings.FILE_MANAGER_ROOT_PATH)
-        if root != p and not Path(settings.FILE_MANAGER_ROOT_PATH) in p.parents:
-            raise ValueError("Path is outside root path, this shouldn't happen.")
-            return False, f"Path {p} not in root"
+    root = Path(settings.FILE_MANAGER_ROOT_PATH)
+    if root != p and not Path(settings.FILE_MANAGER_ROOT_PATH) in p.parents:
+        return False, f"Path {p} not in root"
     return True, p
 
 
@@ -91,7 +89,7 @@ def _resolve_path(should_exist, idxes=(1,)):
                 return False, 'Permission denied'
             except OSError as e:
                 print(e)
-                return False, 'OSError'
+                return False, 'OSError, file could already exist at destination'
 
         return wrapper
 
