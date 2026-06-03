@@ -9,6 +9,8 @@ import struct
 import termios
 import threading
 import time
+import codecs
+import locale
 
 from channels.exceptions import StopConsumer
 from django.core.cache import cache
@@ -60,6 +62,7 @@ class XtermConsumer(WebsocketConsumer):
             print("Started terminal forward")
         epoll = select.epoll()
         epoll.register(self.fd, select.EPOLLIN)
+        increment_decoder = codecs.getincrementaldecoder(locale.getpreferredencoding())(errors='replace')
         while True:
             time.sleep(0.05)
             if not self.child_process_alive():
@@ -69,7 +72,8 @@ class XtermConsumer(WebsocketConsumer):
                 break
             event = epoll.poll(timeout=1)
             if event and event[0][1] == select.EPOLLIN:
-                output = os.read(self.fd, XTERM_MAX_READ_BYTES).decode()
+                output = os.read(self.fd, XTERM_MAX_READ_BYTES)
+                output = increment_decoder.decode(output, final=False)
                 self.send(json.dumps({JSON_TYPE: TYPE_PTY_OUTPUT, JSON_CONTENT: output}))
         if settings.DEBUG:
             print("Ended terminal forward")
@@ -86,8 +90,7 @@ class XtermConsumer(WebsocketConsumer):
             try:
                 term = os.environ["TERM"] if "TERM" in os.environ else "xterm-256color"
                 term_env: dict = {"TERM": term}
-                os.chdir(os.path.expanduser("~" + username))
-                os.execve("/bin/su", ("django_su", "--login", username), term_env)
+                os.execve("/usr/bin/su", ("django_su", "--login", username), term_env)
             except Exception as e:
                 print(f"Error in create child process in xterm: {e}")
                 self.send(json.dumps({JSON_TYPE: TYPE_ERROR, JSON_CONTENT: "Failed to create shell process"}))
