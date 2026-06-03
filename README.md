@@ -38,12 +38,12 @@ Should compatible with most modern Linux distro, tested on Debian 13, Arch.
 - HTTPS (Optional)
   - Install and setup caddy with Caddyfile in the project root for https and other functionalities. (Or use your own reverse proxy)
   - Uncomment last 5 lines of settings.py
-  - Note that enabling HTTPS doesn't make your site secure, there is also disabling https, change secret key, etc. (Not to mention my code might have exploit). See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+  - Note that enabling HTTPS doesn't make your site secure, there is also disabling DEBUG mode, change secret key, etc. (Not to mention my code might have exploit). See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 
 ## Coding details
-Web terminal is implemented with websocket, frontend is xterm.js. Backend is implemented with pty.fork()
-pseudo terminal. User login with "su --loign"
+Web terminal is implemented with websocket, frontend is xterm.js. Backend is implemented with pty.fork() and os.execv().
+User login with "su --loign". Local user info is obtained via pwd.getpwall()
 
 File manager operations are done with websocket. File upload using ajax and http. File download with http.
 
