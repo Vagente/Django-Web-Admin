@@ -50,3 +50,7 @@ div header ol {
 #progress {
     transition: 0.05s;
 }
+
+.table-responsive {
+    overflow-x: visible;
+}
