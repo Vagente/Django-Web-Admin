@@ -1,8 +1,8 @@
 ## This project is only partially tested and may contain exploits. Use it for study or research
 
-This branch aims to migrate shell spawn logic from pty.fork() to subprocess.Popen(),
-due to os.fork() being unsafe when used in multi-thread apps
-(Even though the original code seems to be running without any issue, see official doc for more info).
+This branch aims to migrate shell spawn logic from pty.fork() to subprocess.Popen(), due to os.fork() being 
+unsafe when used in multi-thread apps (Even though we replaced the child process immediately after the fork 
+and the original code seems to be running without any issue. See official doc for more info).
 
 To simulate terminal, still need pty.openpty() for pseudo terminal, bind Popen() stdin, stdout, stderr to slave.
 The issue is that we need to initialize the sub process before running su --login, preexec_fn arg is not safe
