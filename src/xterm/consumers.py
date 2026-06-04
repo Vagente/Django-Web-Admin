@@ -12,6 +12,8 @@ import time
 import subprocess
 from subprocess import TimeoutExpired
 from pathlib import PosixPath
+import codecs
+import locale
 
 from channels.exceptions import StopConsumer
 from django.core.cache import cache
@@ -40,11 +42,9 @@ class XtermConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fd = None
-        # self.child_pid = None
         self.t = None
         self.stop_event = threading.Event()
         self.connected = False
-        # self._child_alive = False
         self.sub_process: subprocess.Popen | None = None
         cache.add(XTERM_CON_CACHE_KEY, 0, timeout=None)
 
@@ -61,10 +61,10 @@ class XtermConsumer(WebsocketConsumer):
             print("Started terminal forward")
         epoll = select.epoll()
         epoll.register(self.fd, select.EPOLLIN)
+        increment_decoder = codecs.getincrementaldecoder(locale.getpreferredencoding())(errors='replace')
         while True:
             time.sleep(0.05)
             if not self.child_process_alive():
-                print(self.sub_process)
                 self.send(json.dumps({JSON_TYPE: TYPE_EXITED}))
                 os.close(self.fd)
                 print(f"subprocess {self.sub_process.pid} exited")
@@ -73,7 +73,8 @@ class XtermConsumer(WebsocketConsumer):
                 break
             event = epoll.poll(timeout=1)
             if event and event[0][1] == select.EPOLLIN:
-                output = os.read(self.fd, XTERM_MAX_READ_BYTES).decode()
+                output = os.read(self.fd, XTERM_MAX_READ_BYTES)
+                output = increment_decoder.decode(output, final=False)
                 self.send(json.dumps({JSON_TYPE: TYPE_PTY_OUTPUT, JSON_CONTENT: output}))
         if settings.DEBUG:
             print("Ended terminal forward")
@@ -135,13 +136,13 @@ class XtermConsumer(WebsocketConsumer):
             self.t.join()
         if self.child_process_alive():
             self.sub_process.terminate()
-        try:
-            self.sub_process.wait(3)
-        except TimeoutExpired:
-            self.sub_process.kill()
-            print(f"Child process {self.sub_process.pid} exited by SIGKILL")
-        else:
-            print(f"Child process {self.sub_process.pid} exited by SIGTERM")
+            try:
+                self.sub_process.wait(3)
+            except TimeoutExpired:
+                self.sub_process.kill()
+                print(f"Child process {self.sub_process.pid} exited by SIGKILL")
+            else:
+                print(f"Child process {self.sub_process.pid} exited by SIGTERM")
         if not self.connected:
             print(self.connected)
             raise StopConsumer
