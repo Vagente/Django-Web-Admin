@@ -2,9 +2,10 @@ name: Django CI
 
 on:
   push:
-    branches: [ "subprocess" ]
+    branches: [ "master", "subprocess" ]
   pull_request:
-    branches: [ "subprocess" ]
+    branches: [ "master", "subprocess" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,8 +24,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Set up valkey
       run: |
-        sudo apt update
-        sudo apt install valkey
+        sudo apt-get update
+        sudo apt-get install valkey
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
