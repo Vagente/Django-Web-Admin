@@ -1,5 +1,14 @@
 ## This project is only partially tested and may contain exploits. Use it for study or research
 
+This branch aims to migrate shell spawn logic from pty.fork() to subprocess.Popen(), due to os.fork() being 
+unsafe when used in multi-thread apps (Even though we replaced the child process immediately after the fork 
+and the original code seems to be running without any issue. See official doc for more info).
+
+To simulate terminal, still need pty.openpty() for pseudo terminal, bind Popen() stdin, stdout, stderr to slave.
+The issue is that we need to initialize the sub process before running su --login, preexec_fn arg is not safe
+in multi-thread app as well. The current workaround(as implemented in xterm), is to run Python script as a
+subprocess and run os.login_tty() on slave fd, then os.exec() to su.
+
 ## Overview
 A webmin like website written with django, django-channels, django-otp.
 Frontend uses bootstrap, xterm.js, etc.
