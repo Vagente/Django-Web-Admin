@@ -5,6 +5,7 @@ on:
     branches: [ "subprocess" ]
   pull_request:
     branches: [ "subprocess" ]
+  workflow_dispatch:
 
 jobs:
   build:
